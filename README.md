@@ -17,20 +17,15 @@ If successful, this returns a status 200 with a token in a JSON structure:
 { "token": "ouoiudofiu987987djfjoi..." }
 ```
 
-This token should be passed in all subsequent requests as a header `Authorization`,
-otherwise requests will get redirected to `/login` again.
+This token should be passed in all subsequent requests as a header `Authorization`.
 
 This header should read:
 ```
 Authorization: Bearer <token>
 ```
 
-Any bad credential will destroy the previous session and return a 401 status.
-Any good credential will regenerate the session if previously existing and return a new token.
-
-### GET `/logout`
-
-This takes no parameter and simply destroy the existing session.
+Any bad credential will return a 401 status.
+Any good credential will return a new token.
 
 ### GET `/reminders`
 
