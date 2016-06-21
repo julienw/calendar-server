@@ -2,6 +2,7 @@ const promisify = require('promisify-node');
 const express = require('express');
 const bodyParser = require('body-parser');
 const compression = require('compression');
+const cors = require('cors');
 
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
@@ -17,6 +18,7 @@ const API_ROOT = '/api/v1';
 const PORT = 3000;
 
 app.use(compression());
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
@@ -26,6 +28,8 @@ app.use(session({
   saveUninitialized: false,
   secure: inProduction,
 }));
+
+app.options('*', cors()); // include before other routes
 
 /**
  * @param {String} req.body.user Authenticating user
