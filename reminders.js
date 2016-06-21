@@ -1,9 +1,14 @@
 const debug = require('debug')('calendar-server:reminders');
 
+const database = require('./database');
+
 module.exports = {
-  index(req, res) {
+  index(req, res, next) {
     debug('index');
-    res.end();
+    database.ready
+      .then(db => { console.log(db); return db.all('SELECT * FROM reminders') })
+      .then(rows => res.send(rows))
+      .catch(err => next(err));
   },
 
   create(req, res) {

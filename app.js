@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
 
 app.use((err, req, res, _next) => {
   console.error(err.stack);
-  res.status(err.status).send(
+  res.status(err.status || 500).send(
     { error: err.name, code: err.code, message: err.message }
   );
 });
