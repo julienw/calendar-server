@@ -17,8 +17,13 @@ If successful, this returns a status 200 with a token in a JSON structure:
 { "token": "ouoiudofiu987987djfjoi..." }
 ```
 
-This token should be passed in all subsequent requests as a header `X-Calendar-Auth`,
+This token should be passed in all subsequent requests as a header `Authorization`,
 otherwise requests will get redirected to `/login` again.
+
+This header should read:
+```
+Authorization: Bearer <token>
+```
 
 Any bad credential will destroy the previous session and return a 401 status.
 Any good credential will regenerate the session if previously existing and return a new token.
@@ -29,7 +34,7 @@ This takes no parameter and simply destroy the existing session.
 
 ### GET `/reminders`
 
-Required: the header `X-Calendar-Auth` that identifies the user.
+Required: the header `Authorization` that identifies the user.
 
 This returns the list of reminders for this user as a JSON object.
 
@@ -41,26 +46,26 @@ Parameters:
 
 ### POST `/reminders`
 
-Required: the header `X-Calendar-Auth` that identifies the user.
+Required: the header `Authorization` that identifies the user.
 
 This creates a new reminder. Returns the ID for the new reminder as well as the
 URL for this reminder in the `Location` header.
 
 ### GET `/reminders/{id}`
 
-Required: the header `X-Calendar-Auth` that identifies the user.
+Required: the header `Authorization` that identifies the user.
 
 This gets the data about a specific reminder.
 
 ### PUT `/reminders/{id}`
 
-Required: the header `X-Calendar-Auth` that identifies the user.
+Required: the header `Authorization` that identifies the user.
 
 This allows to change a specific reminder.
 
 ### DELETE `/reminders/{id}`
 
-Required: the header `X-Calendar-Auth` that identifies the user.
+Required: the header `Authorization` that identifies the user.
 
 This allows to delete a specific reminder.
 
