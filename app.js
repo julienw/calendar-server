@@ -42,11 +42,9 @@ app.get('/', (req, res) => {
 
 app.use((err, req, res, _next) => {
   console.error(err.stack);
-  if (err.name === 'UnauthorizedError') {
-    res.redirect(`${API_ROOT}/login`);
-  } else {
-    res.status(500).send({ error: err.name });
-  }
+  res.status(err.status).send(
+    { error: err.name, code: err.code, message: err.message }
+  );
 });
 
 app.listen(PORT, () => {
