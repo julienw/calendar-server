@@ -45,17 +45,16 @@ module.exports = {
     checkPropertyType(reminder, 'message', 'string');
     checkPropertyType(reminder, 'due', 'number');
 
-    return database.ready.then(db => {
-      return db.run(
+    return database.ready
+      .then(db => db.run(
         `INSERT INTO reminders
           (recipient, message, due, family)
           VALUES (?, ?, ?, ?)`,
-        reminder.recipient,
-        reminder.message,
-        reminder.due,
-        family
-      );
-    });
+          reminder.recipient,
+          reminder.message,
+          reminder.due,
+          family
+      ));
   },
 
   // takes a `reminder` id as parameter
@@ -80,8 +79,19 @@ module.exports = {
   },
 
   // takes a `reminder` id as parameter
-  update(req, res) {
-    debug('update %s', req.params.reminder);
-    res.end();
+  update(family, reminderId, updatedReminder) {
+    debug('update reminder #%s for family %s', reminderId, family);
+    return database.ready
+      .then(db => db.run(
+        `UPDATE reminders SET
+        recipient = ?,
+        message = ?,
+        due = ?
+        WHERE family = ? AND id = ?`,
+        updatedReminder.recipient,
+        updatedReminder.message,
+        updatedReminder.due,
+        family, reminderId
+      ));
   },
 };

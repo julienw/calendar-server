@@ -49,11 +49,15 @@ app.route(`${API_ROOT}/reminders/:reminder`)
     }).catch(next);
   })
   .delete((req, res, next) => {
-    reminders.delete(req.user.family, req.params.reminder).then(() => {
-      res.status(204).end();
-    }).catch(next);
+    reminders.delete(req.user.family, req.params.reminder)
+      .then(() => res.status(204).end())
+      .catch(next);
   })
-  .put(reminders.update);
+  .put((req, res, next) => {
+    reminders.update(req.user.family, req.params.reminder, req.body)
+      .then(() => res.status(204).end())
+      .catch(next);
+  });
 
 app.get('/', (req, res) => {
   res.send('You may want to use the API instead.');
