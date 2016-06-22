@@ -1,6 +1,12 @@
 # calendar-server
 
-This needs a recent enough node that has some ES6 subtleties (especially destructuring assignments).
+## Prerequisites
+
+Node.js 6+ is required. The server relies on some ES6 subtleties (like destructuring assignments).
+We recommend you to use [nvm](https://github.com/creationix/nvm), in order to juggle between many node version. Once you have it, just run:
+```sh
+nvm use
+```
 
 ## API
 
@@ -63,4 +69,3 @@ This allows to change a specific reminder.
 Required: the header `Authorization` that identifies the user.
 
 This allows to delete a specific reminder.
-
