@@ -1,10 +1,12 @@
 const chakram = require('chakram');
 const expect = chakram.expect;
 
+const config = require('./config.json');
+
 describe('/login', function() {
   it('can login', function() {
     return chakram.post(
-      'http://localhost:3000/api/v1/login',
+      `${config.apiRoot}/login`,
       { user: 'family_name', password: 'password' }
     ).then(res => {
       expect(res).status(200);
