@@ -30,12 +30,12 @@ app.use(jwt({ secret: 'some secret that you should configure' }));
 
 app.route(`${API_ROOT}/reminders`)
   .get((req, res, next) => {
-    reminders.index(req.query.start, req.query.limit)
+    reminders.index(req.user.family, req.query.start, req.query.limit)
       .then(rows => res.send(rows))
       .catch(next);
   })
   .post((req, res, next) => {
-    reminders.create(req.body, req.user.family).then((id) => {
+    reminders.create(req.user.family, req.body).then((id) => {
       debug('reminder with ID %s has been created in database', id);
       res.status(201).location(`${API_ROOT}/reminders/${id}`).end();
     }).catch(next);
@@ -43,13 +43,13 @@ app.route(`${API_ROOT}/reminders`)
 
 app.route(`${API_ROOT}/reminders/:reminder`)
   .get((req, res, next) => {
-    reminders.show(req.params.reminder).then((reminder) => {
+    reminders.show(req.user.family, req.params.reminder).then((reminder) => {
       debug('found reminder %o', reminder);
       res.send(reminder);
     }).catch(next);
   })
   .delete((req, res, next) => {
-    reminders.delete(req.params.reminder).then(() => {
+    reminders.delete(req.user.family, req.params.reminder).then(() => {
       res.status(204).end();
     }).catch(next);
   })
