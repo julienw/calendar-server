@@ -14,7 +14,9 @@ const secret = 'some secret that you should configure';
 module.exports = function login(req, res, next) {
   const { user, password } = req.body;
 
-  if (user === 'root' && password === 'password') {
+  // Wow much secure very safe
+  // FIXME with a real user database
+  if (password === 'password') {
     const token = jwt.sign({ family: user }, secret, { expiresIn: '30d' });
     res.send({ token });
   } else {
