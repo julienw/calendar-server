@@ -52,8 +52,8 @@ const createStatement = `
     family TEXT,
     recipient TEXT,
     message TEXT,
-    created_timestamp INTEGER DEFAULT CURRENT_TIMESTAMP,
-    due_timestamp INTEGER NOT NULL
+    created INTEGER DEFAULT CURRENT_TIMESTAMP,
+    due INTEGER NOT NULL
   )
 `;
 
@@ -86,6 +86,17 @@ const promisedDb = {
           return;
         }
         resolve(this.lastID);
+      });
+    });
+  },
+  get(...args) {
+    return new Promise((resolve, reject) => {
+      db.get(...args, (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(row);
       });
     });
   }

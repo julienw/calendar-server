@@ -34,13 +34,16 @@ app.route(`${API_ROOT}/reminders`)
     reminders.create(req.body, req.user.family).then((id) => {
       debug('reminder with ID %s has been created in database', id);
       res.status(201).location(`${API_ROOT}/reminders/${id}`).end();
-    }).catch((e) => {
-      console.error(e.stack);
-      next(e);
-    });
+    }).catch(next);
   });
+
 app.route(`${API_ROOT}/reminders/:reminder`)
-  .get(reminders.show)
+  .get((req, res, next) => {
+    reminders.show(req.params.reminder).then((reminder) => {
+      debug('found reminder %o', reminder);
+      res.send(reminder);
+    }).catch(next);
+  })
   .delete(reminders.delete)
   .put(reminders.update);
 

@@ -27,7 +27,7 @@ module.exports = {
     return database.ready.then(db => {
       return db.run(
         `INSERT INTO reminders
-          (recipient, message, due_timestamp, family)
+          (recipient, message, due, family)
           VALUES (?, ?, ?, ?)`,
         reminder.recipient,
         reminder.message,
@@ -38,9 +38,11 @@ module.exports = {
   },
 
   // takes a `reminder` id as parameter
-  show(req, res) {
-    debug('show %s', req.params.reminder);
-    res.end();
+  show(reminderId) {
+    debug('show %s', reminderId);
+
+    return database.ready
+      .then(db => db.get('SELECT * FROM reminders where id = ?', reminderId));
   },
 
   // takes a `reminder` id as parameter
