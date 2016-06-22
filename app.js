@@ -48,7 +48,11 @@ app.route(`${API_ROOT}/reminders/:reminder`)
       res.send(reminder);
     }).catch(next);
   })
-  .delete(reminders.delete)
+  .delete((req, res, next) => {
+    reminders.delete(req.params.reminder).then(() => {
+      res.status(204).end();
+    }).catch(next);
+  })
   .put(reminders.update);
 
 app.get('/', (req, res) => {

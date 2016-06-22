@@ -67,9 +67,10 @@ module.exports = {
   },
 
   // takes a `reminder` id as parameter
-  delete(req, res) {
-    debug('delete %s', req.params.reminder);
-    res.end();
+  delete(reminderId) {
+    debug('delete %s', reminderId);
+    return database.ready
+      .then(db => db.run('DELETE FROM reminders where id = ?', reminderId));
   },
 
   // takes a `reminder` id as parameter
