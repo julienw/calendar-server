@@ -29,7 +29,11 @@ app.post(`${API_ROOT}/login`, login);
 app.use(jwt({ secret: 'some secret that you should configure' }));
 
 app.route(`${API_ROOT}/reminders`)
-  .get(reminders.index)
+  .get((req, res, next) => {
+    reminders.index(req.query.start, req.query.limit)
+      .then(rows => res.send(rows))
+      .catch(next);
+  })
   .post((req, res, next) => {
     reminders.create(req.body, req.user.family).then((id) => {
       debug('reminder with ID %s has been created in database', id);

@@ -5,17 +5,38 @@ const { InvalidInputError } = require('./errors');
 
 function checkPropertyType(obj, prop, type) {
   if (typeof obj[prop] !== type) {
-    throw new InvalidInputError('invalid_type', `${prop} should be a ${type}`);
+    throw new InvalidInputError(
+      'invalid_type', `"${prop}" should be a ${type}`
+    );
   }
 }
 
 module.exports = {
-  index(req, res, next) {
-    debug('index');
-    database.ready
-      .then(db => db.all('SELECT * FROM reminders'))
-      .then(rows => res.send(rows))
-      .catch(err => next(err));
+  index(start = Math.floor(Date.now() / 1000), limit = 20) {
+
+    // force parameters as integer
+    start = +start;
+    limit = +limit;
+
+    debug('index start=%s limit=%s', start, limit);
+
+    if (Number.isNaN(start)) {
+      throw new InvalidInputError('invalid_type', '"start" should be a number');
+    }
+
+    if (Number.isNaN(limit)) {
+      throw new InvalidInputError('invalid_type', '"limit" should be a number');
+    }
+
+    let statement = 'SELECT * FROM reminders WHERE due > ?';
+    const statementArgs = [ start ];
+    if (limit) {
+      statement += ' LIMIT ?';
+      statementArgs.push(limit);
+    }
+    debug('statement is %s', statement);
+    return database.ready
+      .then(db => db.all(statement, ...statementArgs));
   },
 
   create(reminder, family) {
