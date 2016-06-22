@@ -18,7 +18,7 @@ const versionCreateStatement = `
 `;
 
 function shouldMigrate() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     db.serialize(() => {
       db.run(versionCreateStatement);
       db.get('SELECT version FROM version', (err, row) => {
@@ -49,7 +49,7 @@ const createStatement = `
   CREATE TABLE IF NOT EXISTS reminders
   (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    sender TEXT,
+    family TEXT,
     recipient TEXT,
     message TEXT,
     created_timestamp INTEGER DEFAULT CURRENT_TIMESTAMP,
@@ -65,7 +65,7 @@ const readyPromise = shouldMigrate().then(shouldMigrate => {
   db.run(createStatement, () => console.log('created !'));
 });
 
-let promisedDb = {
+const promisedDb = {
   all(...args) {
     return new Promise((resolve, reject) => {
       db.all(...args, (err, rows) => {
@@ -74,6 +74,18 @@ let promisedDb = {
           return;
         }
         resolve(rows);
+      });
+    });
+  },
+  run(...args) {
+    return new Promise((resolve, reject) => {
+      // Cannot use arrow function because `this` is set by the caller
+      db.run(...args, function(err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(this.lastID);
       });
     });
   }

@@ -30,7 +30,15 @@ app.use(jwt({ secret: 'some secret that you should configure' }));
 
 app.route(`${API_ROOT}/reminders`)
   .get(reminders.index)
-  .post(reminders.create);
+  .post((req, res, next) => {
+    reminders.create(req.body, req.user.family).then((id) => {
+      debug('reminder with ID %s has been created in database', id);
+      res.status(201).location(`${API_ROOT}/reminders/${id}`).end();
+    }).catch((e) => {
+      console.error(e.stack);
+      next(e);
+    });
+  });
 app.route(`${API_ROOT}/reminders/:reminder`)
   .get(reminders.show)
   .delete(reminders.delete)
@@ -48,5 +56,5 @@ app.use((err, req, res, _next) => {
 });
 
 app.listen(PORT, () => {
-  console.log('Listening on port 3000.');
+  console.log(`Listening on port ${PORT}.`);
 });

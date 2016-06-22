@@ -8,4 +8,17 @@ function UnauthorizedError(code, message) {
 
 UnauthorizedError.prototype = Object.create(Error.prototype);
 
-module.exports = { UnauthorizedError };
+function InvalidInputError(code, message) {
+  this.code = code;
+  this.message = message;
+  this.status = 400;
+  this.name = 'InvalidInputError';
+  Error.captureStackTrace(this);
+}
+
+InvalidInputError.prototype = Object.create(Error.prototype);
+
+module.exports = {
+  InvalidInputError,
+  UnauthorizedError,
+};

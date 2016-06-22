@@ -15,7 +15,7 @@ module.exports = function login(req, res, next) {
   const { user, password } = req.body;
 
   if (user === 'root' && password === 'password') {
-    const token = jwt.sign({ user }, secret, { expiresIn: '30d' });
+    const token = jwt.sign({ family: user }, secret, { expiresIn: '30d' });
     res.send({ token });
   } else {
     debug('Bad user/password specified: user=%s, password=%s', user, password);
