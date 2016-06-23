@@ -1,6 +1,7 @@
 const chakram = require('chakram');
 const expect = chakram.expect;
 
+const serverManager = require('./server_manager');
 const config = require('./config.json');
 
 function getCurrentTimestampInSeconds() {
@@ -22,10 +23,11 @@ describe('/reminders', function() {
   const remindersUrl = `${config.apiRoot}/reminders`;
 
   before(function() {
-    return chakram.post(
+    return serverManager.start()
+    .then(() => chakram.post(
       `${config.apiRoot}/login`,
       { user: 'family_name', password: 'password' }
-    ).then(res => {
+    )).then(res => {
       chakram.setRequestDefaults({
         headers: {
           Authorization: `Bearer ${res.body.token}`
@@ -36,6 +38,7 @@ describe('/reminders', function() {
 
   after(function() {
     chakram.clearRequestDefaults();
+    return serverManager.stop();
   });
 
   it('should return an empty list at startup', function() {
