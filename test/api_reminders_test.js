@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 const chakram = require('chakram');
 const expect = chakram.expect;
 
@@ -22,7 +23,13 @@ function assertFullRemindersAreEqual(actual, expected,
 describe('/reminders', function() {
   const remindersUrl = `${config.apiRoot}/reminders`;
 
-  before(function() {
+  const initialReminder = {
+    recipient: 'Jane',
+    message: 'Pick up kids at school',
+    due: Date.now() + 2 * 60 * 60,
+  };
+
+  beforeEach(function() {
     return serverManager.start()
       .then(() => chakram.post(
         `${config.apiRoot}/login`,
@@ -36,25 +43,13 @@ describe('/reminders', function() {
       });
   });
 
-  after(function() {
+  afterEach(function() {
     chakram.clearRequestDefaults();
     return serverManager.stop();
   });
 
-  it('should return an empty list at startup', function() {
-    return chakram.get(remindersUrl).then(res => {
-      expect(res).status(200);
-      expect(res.body).deep.equal([]);
-    });
-  });
-
   it('should add a new reminder and make it visible', function() {
     const expectedLocation = `${remindersUrl}/1`;
-    const initialReminder = {
-      recipient: 'Jane',
-      message: 'Pick up kids at school',
-      due: Date.now() + 2 * 60 * 60,
-    };
     const expectedReminder = Object.assign(
       { id: 1, family: 'family_name' },
       initialReminder
@@ -100,6 +95,45 @@ describe('/reminders', function() {
       return chakram.get(remindersUrl);
     }).then(res => {
       expect(res.body).deep.equal([]);
+    });
+  });
+
+  it('GET /reminders', function() {
+    return chakram.get(remindersUrl).then(res => {
+      expect(res).status(200);
+      expect(res.body).deep.equal([]);
+
+      return chakram.post(remindersUrl, initialReminder);
+    }).then(
+      () => chakram.get(remindersUrl)
+    ).then(res => {
+      expect(res.body).lengthOf(1);
+
+      return chakram.post(remindersUrl, initialReminder);
+    }).then(
+      () => chakram.get(remindersUrl)
+    ).then(res => {
+      expect(res.body).lengthOf(2);
+
+      const promises = [];
+      for (let i = 0; i < 20; i++) {
+        promises.push(chakram.post(remindersUrl, initialReminder));
+      }
+      return Promise.all(promises);
+    }).then(
+      () => chakram.get(remindersUrl)
+    ).then(res => {
+      expect(res.body).lengthOf(20);
+
+      return chakram.get(`${remindersUrl}?limit=25`);
+    }).then(res => {
+      expect(res.body).lengthOf(22);
+
+      return chakram.get(`${remindersUrl}?limit=0`);
+    }).then(res => {
+      expect(res.body).lengthOf(22);
+
+      expect(res.body.every((reminder, i) => reminder.id === i + 1)).true;
     });
   });
 });
