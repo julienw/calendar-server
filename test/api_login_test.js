@@ -2,7 +2,7 @@ const chakram = require('chakram');
 const expect = chakram.expect;
 
 const serverManager = require('./server_manager');
-const config = require('./config.json');
+const config = require('./config.js');
 
 describe('/login', function() {
 

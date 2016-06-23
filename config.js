@@ -4,7 +4,7 @@ const config = require('minimist')(
   {
     default: {
       port: 3000,
-      profile: path.join(__dirname, 'development')
+      profile: path.join(__dirname, 'profiles/development')
     }
   }
 );
