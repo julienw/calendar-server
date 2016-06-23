@@ -24,16 +24,16 @@ describe('/reminders', function() {
 
   before(function() {
     return serverManager.start()
-    .then(() => chakram.post(
-      `${config.apiRoot}/login`,
-      { user: 'family_name', password: 'password' }
-    )).then(res => {
-      chakram.setRequestDefaults({
-        headers: {
-          Authorization: `Bearer ${res.body.token}`
-        }
+      .then(() => chakram.post(
+        `${config.apiRoot}/login`,
+        { user: 'family_name', password: 'password' }
+      )).then(res => {
+        chakram.setRequestDefaults({
+          headers: {
+            Authorization: `Bearer ${res.body.token}`
+          }
+        });
       });
-    });
   });
 
   after(function() {
