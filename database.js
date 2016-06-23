@@ -1,15 +1,12 @@
 const debug = require('debug')('calendar-server:database');
+const path = require('path');
 
 const sqlite3 = require('sqlite3').verbose();
 const deferred = require('./deferred');
 
 const DB_VERSION = 1;
 
-const db = new sqlite3.Database('reminders.db', (err) => {
-  if (err) {
-    console.error('Error while opening the sqlite database', err);
-  }
-});
+let db;
 
 const versionCreateStatement = `
   CREATE TABLE IF NOT EXISTS version
@@ -60,7 +57,14 @@ const createStatement = `
 
 const readyDeferred = deferred();
 
-function init() {
+function init(profileDir) {
+  const dbPath = path.join(profileDir, 'reminders.db');
+  db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      console.error('Error while opening the sqlite database', err);
+    }
+  });
+
   shouldMigrate().then(shouldMigrate => {
     // we don't care
     debug('Should we migrate ? %s', shouldMigrate);

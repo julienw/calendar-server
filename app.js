@@ -9,13 +9,14 @@ const debug = require('debug')('calendar-server:app');
 
 const reminders = require('./reminders');
 const login = require('./login');
+const config = require('./config');
+
+require('./database').init(config.profile);
+
 
 const app = express();
 
 const API_ROOT = '/api/v1';
-const PORT = 3000;
-
-require('./database').init();
 
 app.use(compression());
 app.use(cors());
@@ -72,6 +73,6 @@ app.use((err, req, res, _next) => {
   );
 });
 
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}.`);
+app.listen(config.port, () => {
+  console.log(`Listening on port ${config.port}.`);
 });
