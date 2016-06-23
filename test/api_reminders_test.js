@@ -9,10 +9,7 @@ function getCurrentTimestampInSeconds() {
 
 function assertFullRemindersAreEqual(actual, expected,
   timestampBeforeCreation, timestampAfterCreation) {
-
-  // FIXME: Make the server return an integer instead
-  const createdTime = new Date(actual.created).getTime() / 1000 + 2 * 60 * 60;
-  expect(createdTime).within(timestampBeforeCreation, timestampAfterCreation);
+  expect(actual.created).within(timestampBeforeCreation, timestampAfterCreation);
 
   // Removed so we don't assert equality on this unknown value
   delete actual.created;

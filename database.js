@@ -52,7 +52,7 @@ const createStatement = `
     family TEXT,
     recipient TEXT,
     message TEXT,
-    created INTEGER DEFAULT CURRENT_TIMESTAMP,
+    created INTEGER DEFAULT (strftime('%s', 'now')), -- Needed to force integer
     due INTEGER NOT NULL
   )
 `;
