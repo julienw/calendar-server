@@ -15,6 +15,8 @@ const app = express();
 const API_ROOT = '/api/v1';
 const PORT = 3000;
 
+require('./database').init();
+
 app.use(compression());
 app.use(cors());
 app.use(bodyParser.json());

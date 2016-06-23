@@ -1,6 +1,7 @@
 const debug = require('debug')('calendar-server:database');
 
 const sqlite3 = require('sqlite3').verbose();
+const deferred = require('./deferred');
 
 const DB_VERSION = 1;
 
@@ -57,13 +58,22 @@ const createStatement = `
   )
 `;
 
-const readyPromise = shouldMigrate().then(shouldMigrate => {
-  // we don't care
-  debug('Should we migrate ? %s', shouldMigrate);
-  return updateVersion();
-}).then(() => {
-  db.run(createStatement, () => console.log('created !'));
-});
+const readyDeferred = deferred();
+
+function init() {
+  shouldMigrate().then(shouldMigrate => {
+    // we don't care
+    debug('Should we migrate ? %s', shouldMigrate);
+    return updateVersion();
+  }).then(() => {
+    db.run(createStatement, (err) => {
+      if (err) {
+        readyDeferred.reject(err);
+      }
+      readyDeferred.resolve();
+    });
+  });
+}
 
 const promisedDb = {
   all(...args) {
@@ -103,5 +113,6 @@ const promisedDb = {
 };
 
 module.exports = {
-  ready: readyPromise.then(() => promisedDb)
+  init,
+  ready: readyDeferred.promise.then(() => promisedDb)
 };
