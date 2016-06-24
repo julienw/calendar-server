@@ -43,42 +43,6 @@ function updateVersion() {
   });
 }
 
-const createStatement = `
-  CREATE TABLE IF NOT EXISTS reminders
-  (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    family TEXT,
-    recipient TEXT,
-    message TEXT,
-    created INTEGER DEFAULT (strftime('%s', 'now')), -- Needed to force integer
-    due INTEGER NOT NULL
-  )
-`;
-
-const readyDeferred = deferred();
-
-function init(profileDir) {
-  const dbPath = path.join(profileDir, 'reminders.db');
-  db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error('Error while opening the sqlite database', err);
-    }
-  });
-
-  shouldMigrate().then(shouldMigrate => {
-    // we don't care
-    debug('Should we migrate ? %s', shouldMigrate);
-    return updateVersion();
-  }).then(() => {
-    db.run(createStatement, (err) => {
-      if (err) {
-        readyDeferred.reject(err);
-      }
-      readyDeferred.resolve();
-    });
-  });
-}
-
 const promisedDb = {
   all(...args) {
     return new Promise((resolve, reject) => {
@@ -115,6 +79,49 @@ const promisedDb = {
     });
   }
 };
+
+const readyDeferred = deferred();
+
+const createStatements = [`
+  CREATE TABLE IF NOT EXISTS reminders
+  (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    family TEXT,
+    recipient TEXT,
+    message TEXT,
+    created INTEGER DEFAULT (strftime('%s', 'now')), -- Needed to force integer
+    due INTEGER NOT NULL
+  )
+`, `
+  CREATE TABLE IF NOT EXISTS notifications
+  (
+    family TEXT,
+    identifier TEXT,
+    endpoint TEXT,
+    p256dh TEXT,
+    auth TEXT
+  )
+`];
+
+function init(profileDir) {
+  const dbPath = path.join(profileDir, 'reminders.db');
+  db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      console.error('Error while opening the sqlite database', err);
+    }
+  });
+
+  shouldMigrate().then(shouldMigrate => {
+    // we don't care
+    debug('Should we migrate ? %s', shouldMigrate);
+    return updateVersion();
+  }).then(() => {
+    const promises = createStatements.map(
+      statement => promisedDb.run(statement)
+    );
+    return Promise.all(promises);
+  }).then(readyDeferred.resolve, readyDeferred.reject);
+}
 
 module.exports = {
   init,

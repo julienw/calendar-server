@@ -2,14 +2,7 @@ const debug = require('debug')('calendar-server:reminders');
 
 const database = require('./database');
 const { InvalidInputError } = require('./errors');
-
-function checkPropertyType(obj, prop, type) {
-  if (typeof obj[prop] !== type) {
-    throw new InvalidInputError(
-      'invalid_type', `"${prop}" should be a ${type}`
-    );
-  }
-}
+const { checkPropertyType } = require('./object_validator.js');
 
 module.exports = {
   index(family, start = Math.floor(Date.now() / 1000), limit = 20) {
