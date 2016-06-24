@@ -1,6 +1,6 @@
 const debug = require('debug')('calendar-server:routes/reminders');
 
-const reminders = require('../reminders');
+const reminders = require('../dao/reminders');
 
 function removeFamilyProperty(item) {
   delete item.family;

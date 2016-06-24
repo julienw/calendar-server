@@ -2,7 +2,7 @@ const debug = require('debug')('calendar-server:database');
 const path = require('path');
 
 const sqlite3 = require('sqlite3').verbose();
-const deferred = require('./deferred');
+const deferred = require('../utils/deferred');
 
 const DB_VERSION = 1;
 

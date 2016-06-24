@@ -1,8 +1,8 @@
 const debug = require('debug')('calendar-server:reminders');
 
 const database = require('./database');
-const { InvalidInputError } = require('./errors');
-const { checkPropertyType } = require('./object_validator.js');
+const { InvalidInputError } = require('../utils/errors');
+const { checkPropertyType } = require('../utils/object_validator.js');
 
 module.exports = {
   index(family, start = Math.floor(Date.now() / 1000), limit = 20) {

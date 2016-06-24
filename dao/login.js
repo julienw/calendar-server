@@ -2,7 +2,7 @@ const debug = require('debug')('calendar-server:login');
 
 const jwt = require('jsonwebtoken');
 
-const { UnauthorizedError } = require('./errors');
+const { UnauthorizedError } = require('../utils/errors');
 
 const secret = 'some secret that you should configure';
 
