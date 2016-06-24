@@ -58,7 +58,6 @@ GET parameters:
 ```json
 [{
   "id": 1,
-  "family": "Smith",
   "recipient": "John",
   "message": "Pick up kids at school",
   "created": 1466588359,
@@ -100,7 +99,6 @@ This gets the data about a specific reminder.
 ```json
 {
   "id": 1,
-  "family": "Smith",
   "recipient": "John",
   "message": "Pick up kids at school",
   "created": 1466588359,

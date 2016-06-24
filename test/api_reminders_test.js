@@ -51,7 +51,7 @@ describe('/reminders', function() {
   it('should add a new reminder and make it visible', function() {
     const expectedLocation = `${remindersUrl}/1`;
     const expectedReminder = Object.assign(
-      { id: 1, family: 'family_name' },
+      { id: 1 },
       initialReminder
     );
     const updatedReminder = {

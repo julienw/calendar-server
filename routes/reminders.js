@@ -2,12 +2,19 @@ const debug = require('debug')('calendar-server:routes/reminders');
 
 const reminders = require('../reminders');
 
+function removeFamilyProperty(item) {
+  delete item.family;
+  return item;
+}
+
 function addRoutes(app, apiRoot) {
   app.route(`${apiRoot}/reminders`)
     .get((req, res, next) => {
       reminders.index(req.user.family, req.query.start, req.query.limit)
-        .then(rows => res.send(rows))
-        .catch(next);
+        .then(rows => {
+          // We don't want to expose the family in the API result
+          res.send(rows.map(removeFamilyProperty));
+        }).catch(next);
     })
     .post((req, res, next) => {
       reminders.create(req.user.family, req.body).then((id) => {
@@ -20,7 +27,7 @@ function addRoutes(app, apiRoot) {
     .get((req, res, next) => {
       reminders.show(req.user.family, req.params.reminder).then((reminder) => {
         debug('found reminder %o', reminder);
-        res.send(reminder);
+        res.send(removeFamilyProperty(reminder));
       }).catch(next);
     })
     .delete((req, res, next) => {
