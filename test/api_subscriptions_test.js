@@ -47,69 +47,58 @@ describe('/subscriptions', function() {
     { title: updatedSubscription.title }
   );
 
-  beforeEach(function() {
-    return serverManager.start()
-      .then(() => chakram.post(
-        `${config.apiRoot}/login`,
-        { user: 'family_name', password: 'password' }
-      )).then(res => {
-        chakram.setRequestDefaults({
-          headers: {
-            Authorization: `Bearer ${res.body.token}`
-          }
-        });
-      });
+  beforeEach(function*() {
+    yield serverManager.start();
+    const res = yield chakram.post(
+      `${config.apiRoot}/login`,
+      { user: 'family_name', password: 'password' }
+    );
+    chakram.setRequestDefaults({
+      headers: {
+        Authorization: `Bearer ${res.body.token}`
+      }
+    });
   });
 
-  afterEach(function() {
+  afterEach(function*() {
     chakram.clearRequestDefaults();
-    return serverManager.stop();
+    yield serverManager.stop();
   });
 
-  it('should implement basic CRUD functionality', function() {
+  it('should implement basic CRUD functionality', function*() {
     const expectedLocation = `${subscriptionsUrl}/1`;
 
-    return chakram.post(subscriptionsUrl, initialSubscription).then(res => {
-      expect(res).status(201);
-      expect(res).header('location', '/api/v1/subscriptions/1');
+    let res = yield chakram.post(subscriptionsUrl, initialSubscription);
+    expect(res).status(201);
+    expect(res).header('location', '/api/v1/subscriptions/1');
 
-      return chakram.get(subscriptionsUrl);
-    }).then(res => {
-      expect(res).status(200);
-      expect(res.body).deep.equal([expectedSubscription]);
+    res = yield chakram.get(subscriptionsUrl);
+    expect(res).status(200);
+    expect(res.body).deep.equal([expectedSubscription]);
 
-      return chakram.put(expectedLocation, updatedSubscription);
-    }).then(res => {
-      expect(res).status(204);
+    res = yield chakram.put(expectedLocation, updatedSubscription);
+    expect(res).status(204);
 
-      return chakram.get(expectedLocation);
-    }).then(res => {
-      expect(res).status(200);
-      expect(res.body).deep.equal(expectedUpdatedSubscription);
+    res = yield chakram.get(expectedLocation);
+    expect(res).status(200);
+    expect(res.body).deep.equal(expectedUpdatedSubscription);
 
-      return chakram.delete(expectedLocation);
-    }).then(res => {
-      expect(res).status(204);
+    res = yield chakram.delete(expectedLocation);
+    expect(res).status(204);
 
-      return chakram.get(subscriptionsUrl);
-    }).then(res => {
-      expect(res.body).deep.equal([]);
-    });
+    res = yield chakram.get(subscriptionsUrl);
+    expect(res.body).deep.equal([]);
   });
 
-  it('404 errors', function() {
+  it('404 errors', function*() {
     const location = `${subscriptionsUrl}/99999`;
-    return chakram.get(location).then(res => {
-      expect(res).status(404);
+    let res = yield chakram.get(location);
+    expect(res).status(404);
 
-      return chakram.put(location, {});
-    }).then(res => {
-      expect(res).status(404);
+    res = yield chakram.put(location, {});
+    expect(res).status(404);
 
-      return chakram.delete(location);
-    }).then(res => {
-      expect(res).status(404);
-    });
+    res = yield chakram.delete(location);
+    expect(res).status(404);
   });
-
 });
