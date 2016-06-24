@@ -11,7 +11,15 @@ router.post('/', function(req, res, next) {
 
 router.get('/', function(req, res, next) {
   notifications.index(req.user.family).then((rows) => {
-    res.send(rows);
+    res.send(rows.map(item => ({
+      identifier: item.identifier,
+      subscription: {
+        endpoint: item.endpoint,
+        keys: {
+          p256dh: item.p256dh
+        }
+      }
+    })));
   }).catch(next);
 });
 

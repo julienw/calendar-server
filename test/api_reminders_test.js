@@ -70,7 +70,7 @@ describe('/reminders', function() {
     return chakram.post(remindersUrl, initialReminder).then(res => {
       timestampAfterCreation = getCurrentTimestampInSeconds();
       expect(res).status(201);
-      expect(res.response.headers.location).deep.equal('/api/v1/reminders/1');
+      expect(res).header('location', '/api/v1/reminders/1');
 
       return chakram.get(expectedLocation);
     }).then(res => {
