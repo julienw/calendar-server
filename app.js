@@ -5,11 +5,11 @@ const cors = require('cors');
 
 const jwt = require('express-jwt');
 
-const login = require('./login');
+const login = require('./dao/login');
 const config = require('./config');
 const addRemindersRoutes = require('./routes/reminders');
 
-require('./database').init(config.profile);
+require('./dao/database').init(config.profile);
 
 
 const app = express();

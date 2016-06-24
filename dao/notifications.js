@@ -1,7 +1,7 @@
 const debug = require('debug')('calendar-server:notifications');
 
 const database = require('./database');
-const { checkPropertyType } = require('./object_validator.js');
+const { checkPropertyType } = require('../utils/object_validator.js');
 
 module.exports = {
   index(family) {

@@ -1,5 +1,5 @@
 const express = require('express');
-const notifications = require('../notifications');
+const notifications = require('../dao/notifications');
 
 const router = express.Router();
 
