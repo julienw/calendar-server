@@ -28,33 +28,32 @@ describe('/notifications', function() {
     }
   };
 
-  beforeEach(function() {
-    return serverManager.start()
-      .then(() => chakram.post(
-        `${config.apiRoot}/login`,
-        { user: 'family_name', password: 'password' }
-      )).then(res => {
-        chakram.setRequestDefaults({
-          headers: {
-            Authorization: `Bearer ${res.body.token}`
-          }
-        });
-      });
-  });
+  beforeEach(function*() {
+    yield serverManager.start();
 
-  afterEach(function() {
-    chakram.clearRequestDefaults();
-    return serverManager.stop();
-  });
+    const res = yield chakram.post(
+      `${config.apiRoot}/login`,
+      { user: 'family_name', password: 'password' }
+    );
 
-  it('should add a new notification endpoint and make it visible', function() {
-    return chakram.post(notificationsUrl, initialNotification).then(res => {
-      expect(res).status(201);
-      expect(res).header('location', '/api/v1/notifications/1');
-
-      return chakram.get(notificationsUrl);
-    }).then(res => {
-      expect(res.body).deep.equal([expectedNotification]);
+    chakram.setRequestDefaults({
+      headers: {
+        Authorization: `Bearer ${res.body.token}`
+      }
     });
+  });
+
+  afterEach(function*() {
+    chakram.clearRequestDefaults();
+    yield serverManager.stop();
+  });
+
+  it('should add a new notification endpoint and make it visible', function*() {
+    let res = yield chakram.post(notificationsUrl, initialNotification);
+    expect(res).status(201);
+    expect(res).header('location', '/api/v1/notifications/1');
+
+    res = yield chakram.get(notificationsUrl);
+    expect(res.body).deep.equal([expectedNotification]);
   });
 });
