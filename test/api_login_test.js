@@ -6,27 +6,28 @@ const config = require('./config.js');
 
 describe('/login', function() {
 
-  before(function* () {
-    yield serverManager.start();
+  before(function() {
+    return serverManager.start();
   });
 
-  after(function* () {
-    yield serverManager.stop();
+  after(function() {
+    return serverManager.stop();
   });
 
-  it('can login', function*() {
-    const res = yield chakram.post(
+  it('can login', function() {
+    return chakram.post(
       `${config.apiRoot}/login`,
       { user: 'family_name', password: 'password' }
-    );
-    expect(res).status(200);
-    expect(res).schema({
-      type: 'object',
-      properties: {
-        token: {
-          type: 'string'
+    ).then(res => {
+      expect(res).status(200);
+      expect(res).schema({
+        type: 'object',
+        properties: {
+          token: {
+            type: 'string'
+          }
         }
-      }
+      });
     });
   });
 });
