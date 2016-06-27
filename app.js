@@ -7,7 +7,6 @@ const jwt = require('express-jwt');
 
 const login = require('./dao/login');
 const config = require('./config');
-const addRemindersRoutes = require('./routes/reminders');
 
 require('./dao/database').init(config.profile);
 
@@ -29,7 +28,7 @@ app.post(`${API_ROOT}/login`, login);
 // redirect if we're not logged in
 app.use(jwt({ secret: 'some secret that you should configure' }));
 
-addRemindersRoutes(app, API_ROOT);
+app.use(`${API_ROOT}/reminders`, require('./routes/reminders'));
 app.use(`${API_ROOT}/notifications`, require('./routes/notifications'));
 
 app.get('/', (req, res) => {
