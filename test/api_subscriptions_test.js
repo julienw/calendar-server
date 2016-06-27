@@ -29,6 +29,24 @@ describe('/subscriptions', function() {
     }
   };
 
+  // In the test we'll try to change all fields, but only `title` should change.
+  const updatedSubscription = {
+    id: 1,
+    title: 'my_updated_subscription',
+    subscription: {
+      endpoint: 'https://updated.endpoint',
+      keys: {
+        p256dh: 'updated_base_64',
+        auth: 'updated_base_64'
+      }
+    }
+  };
+
+  const expectedUpdatedSubscription = Object.assign(
+    {}, expectedSubscription,
+    { title: updatedSubscription.title }
+  );
+
   beforeEach(function() {
     return serverManager.start()
       .then(() => chakram.post(
@@ -48,14 +66,34 @@ describe('/subscriptions', function() {
     return serverManager.stop();
   });
 
-  it('should add a new subscription endpoint and make it visible', function() {
+  it('should implement basic CRUD functionality', function() {
+    const expectedLocation = `${subscriptionsUrl}/1`;
+
     return chakram.post(subscriptionsUrl, initialSubscription).then(res => {
       expect(res).status(201);
       expect(res).header('location', '/api/v1/subscriptions/1');
 
       return chakram.get(subscriptionsUrl);
     }).then(res => {
+      expect(res).status(200);
       expect(res.body).deep.equal([expectedSubscription]);
+
+      return chakram.put(expectedLocation, updatedSubscription);
+    }).then(res => {
+      expect(res).status(204);
+
+      return chakram.get(expectedLocation);
+    }).then(res => {
+      expect(res).status(200);
+      expect(res.body).deep.equal(expectedUpdatedSubscription);
+
+      return chakram.delete(expectedLocation);
+    }).then(res => {
+      expect(res).status(204);
+
+      return chakram.get(subscriptionsUrl);
+    }).then(res => {
+      expect(res.body).deep.equal([]);
     });
   });
 

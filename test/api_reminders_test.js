@@ -48,7 +48,7 @@ describe('/reminders', function() {
     return serverManager.stop();
   });
 
-  it('should add a new reminder and make it visible', function() {
+  it('should implement basic CRUD functionality', function() {
     const expectedLocation = `${remindersUrl}/1`;
     const expectedReminder = Object.assign(
       { id: 1 },
