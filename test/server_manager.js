@@ -29,5 +29,30 @@ module.exports = {
       handler.on('exit', () => resolve());
       handler.kill();
     });
-  }
+  },
+
+  inject() {
+    const chakram = require('chakram');
+    const config = require('./config');
+
+    beforeEach(() =>
+      this.start().then(() =>
+        chakram.post(
+          `${config.apiRoot}/login`,
+          { user: 'family_name', password: 'password' }
+        )
+      ).then(res => {
+        chakram.setRequestDefaults({
+          headers: {
+            Authorization: `Bearer ${res.body.token}`
+          }
+        });
+      })
+    );
+
+    afterEach(() => {
+      chakram.clearRequestDefaults();
+      return this.stop();
+    });
+  },
 };
