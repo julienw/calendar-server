@@ -1,7 +1,7 @@
 const debug = require('debug')('calendar-server:subscriptions');
 
 const database = require('./database');
-const { NotFoundError } = require('../utils/errors');
+const { InternalError, NotFoundError } = require('../utils/errors');
 const { checkPropertyType } = require('../utils/object_validator.js');
 
 function notFoundError(id) {
