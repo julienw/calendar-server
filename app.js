@@ -36,7 +36,11 @@ app.get('/', (req, res) => {
 });
 
 app.use((err, req, res, _next) => {
-  console.error(err.stack);
+  switch(err.name) {
+    case 'NotFoundError': break;
+    default: console.error(err.stack);
+  }
+
   res.status(err.status || 500).send(
     { error: err.name, code: err.code, message: err.message }
   );

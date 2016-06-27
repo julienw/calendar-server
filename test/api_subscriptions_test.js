@@ -58,4 +58,20 @@ describe('/subscriptions', function() {
       expect(res.body).deep.equal([expectedSubscription]);
     });
   });
+
+  it('404 errors', function() {
+    const location = `${subscriptionsUrl}/99999`;
+    return chakram.get(location).then(res => {
+      expect(res).status(404);
+
+      return chakram.put(location, {});
+    }).then(res => {
+      expect(res).status(404);
+
+      return chakram.delete(location);
+    }).then(res => {
+      expect(res).status(404);
+    });
+  });
+
 });

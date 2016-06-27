@@ -98,6 +98,21 @@ describe('/reminders', function() {
     });
   });
 
+  it('404 errors', function() {
+    const location = `${remindersUrl}/99999`;
+    return chakram.get(location).then(res => {
+      expect(res).status(404);
+
+      return chakram.put(location, {});
+    }).then(res => {
+      expect(res).status(404);
+
+      return chakram.delete(location);
+    }).then(res => {
+      expect(res).status(404);
+    });
+  });
+
   it('GET /reminders', function() {
     return chakram.get(remindersUrl).then(res => {
       expect(res).status(200);

@@ -1,8 +1,32 @@
 const debug = require('debug')('calendar-server:reminders');
 
 const database = require('./database');
-const { InvalidInputError } = require('../utils/errors');
+const {
+  InternalError, InvalidInputError, NotFoundError
+} = require('../utils/errors');
 const { checkPropertyType } = require('../utils/object_validator.js');
+
+function notFoundError(id) {
+  return new NotFoundError(
+    'reminder_not_found',
+    `The reminder with id ${id} does not exist.`
+  );
+}
+
+function checkUpdateDelete(mode, id) {
+  return result => {
+    if (result.changes === 0) {
+      throw notFoundError(id);
+    }
+
+    if (result.changes > 1) {
+      throw new InternalError(
+        'database_corrupted',
+        `More than 1 reminder has been ${mode} (id=${id}).`
+      );
+    }
+  };
+}
 
 module.exports = {
   index(family, start = Math.floor(Date.now() / 1000), limit = 20) {
@@ -47,10 +71,10 @@ module.exports = {
           reminder.message,
           reminder.due,
           family
-      ));
+      ))
+      .then(result => result.lastId);
   },
 
-  // takes a `reminder` id as parameter
   show(family, reminderId) {
     debug('show reminder #%s for family %s', reminderId, family);
 
@@ -58,20 +82,20 @@ module.exports = {
       .then(db => db.get(
         'SELECT * FROM reminders WHERE family = ? AND id = ?',
         family, reminderId
-      ));
+      ))
+      .then(row => row || Promise.reject(notFoundError(reminderId)));
   },
 
-  // takes a `reminder` id as parameter
   delete(family, reminderId) {
     debug('delete reminder #%s for family %s', reminderId, family);
     return database.ready
       .then(db => db.run(
         'DELETE FROM reminders WHERE family = ? AND id = ?',
         family, reminderId
-      ));
+      ))
+      .then(checkUpdateDelete('deleted', reminderId));
   },
 
-  // takes a `reminder` id as parameter
   update(family, reminderId, updatedReminder) {
     debug('update reminder #%s for family %s', reminderId, family);
     return database.ready
@@ -85,6 +109,7 @@ module.exports = {
         updatedReminder.message,
         updatedReminder.due,
         family, reminderId
-      ));
+      ))
+      .then(checkUpdateDelete('updated', reminderId));
   },
 };

@@ -63,7 +63,7 @@ const promisedDb = {
           reject(err);
           return;
         }
-        resolve(this.lastID);
+        resolve({ lastId: this.lastID, changes: this.changes });
       });
     });
   },

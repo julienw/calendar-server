@@ -1,24 +1,20 @@
-function UnauthorizedError(code, message) {
-  this.code = code;
-  this.message = message;
-  this.status = 401;
-  this.name = 'UnauthorizedError';
-  Error.captureStackTrace(this);
+function createError(status, name) {
+  function NewError(code, message) {
+    this.code = code;
+    this.message = message;
+    this.status = status;
+    this.name = name;
+    Error.captureStackTrace(this);
+  }
+
+  NewError.prototype = Object.create(Error.prototype);
+
+  return NewError;
 }
-
-UnauthorizedError.prototype = Object.create(Error.prototype);
-
-function InvalidInputError(code, message) {
-  this.code = code;
-  this.message = message;
-  this.status = 400;
-  this.name = 'InvalidInputError';
-  Error.captureStackTrace(this);
-}
-
-InvalidInputError.prototype = Object.create(Error.prototype);
 
 module.exports = {
-  InvalidInputError,
-  UnauthorizedError,
+  InvalidInputError: createError(400, 'InvalidInputError'),
+  UnauthorizedError: createError(401, 'UnauthorizedError'),
+  NotFoundError: createError(404, 'NotFoundError'),
+  InternalError: createError(500, 'InternalError'),
 };
