@@ -9,6 +9,8 @@ const login = require('./dao/login');
 const config = require('./config');
 
 require('./dao/database').init(config.profile);
+// Starts up the notification polling mechanism
+require('./business/notifications');
 
 
 const app = express();
@@ -46,6 +48,6 @@ app.use((err, req, res, _next) => {
   );
 });
 
-app.listen(config.port, () => {
-  console.log(`Listening on port ${config.port}.`);
+app.listen(config.httpPort, () => {
+  console.log(`HTTP server listening on port ${config.httpPort}.`);
 });

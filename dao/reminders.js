@@ -112,4 +112,22 @@ module.exports = {
       ))
       .then(checkUpdateDelete('updated', reminderId));
   },
+
+  findAllDueReminders(nowInSeconds) {
+    return database.ready.then(db =>
+      db.all(
+        'SELECT * FROM reminders WHERE due > ? AND status = "waiting"',
+        nowInSeconds
+      )
+    );
+  },
+
+  setReminderStatus(id, status) {
+    return database.ready.then(db =>
+      db.run(
+        'UPDATE reminders SET status = ? WHERE id = ?',
+        status, id
+      )
+    );
+  }
 };

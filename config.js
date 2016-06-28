@@ -3,7 +3,9 @@ const config = require('minimist')(
   process.argv.slice(2),
   {
     default: {
-      port: 3000,
+      httpPort: 3000,
+      mqPort: 4000,
+      notificationPoll: 60, // in seconds
       profile: path.join(__dirname, 'profiles/development')
     }
   }
