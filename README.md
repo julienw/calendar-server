@@ -8,6 +8,11 @@ We recommend you to use [nvm](https://github.com/creationix/nvm), in order to ju
 nvm use
 ```
 
+## Configuration
+
+User configuration can be set in `config/config.js`. Make a copy of `config/config.template.js` and follow instructions in the file.
+
+
 ## API login
 
 The API root is `/api/v1`. All following routes are relative to this root.
@@ -43,6 +48,8 @@ Any good credential will return a new token.
 
 ## API reminders
 
+Note: all timestamps are in milliseconds since the UNIX epoch.
+
 ### GET `/reminders`
 
 Required: the header `Authorization` that identifies the user.
@@ -62,8 +69,8 @@ GET parameters:
   "id": 1,
   "recipient": "John",
   "message": "Pick up kids at school",
-  "created": 1466588359,
-  "due": 1466613000
+  "created": 1466588359000,
+  "due": 1466613000000
 }]
 ```
 
@@ -81,7 +88,7 @@ All properties must be present. There is no default value. For instance (JSON):
 {
   "recipient": "John",
   "message": "Pick up kids at school",
-  "due": 1466613000
+  "due": 1466613000000
 }
 ```
 
@@ -103,8 +110,8 @@ This gets the data about a specific reminder.
   "id": 1,
   "recipient": "John",
   "message": "Pick up kids at school",
-  "created": 1466588359,
-  "due": 1466613000
+  "created": 1466588359000,
+  "due": 1466613000000
 }
 ```
 * 404 if no reminder with this ID exists.
@@ -121,7 +128,7 @@ All properties must be present. For example, if we would like to change **only**
 [{
   "recipient": "Jane",
   "message": "Pick up kids at school",
-  "due": 1466613000
+  "due": 1466613000000
 }]
 ```
 

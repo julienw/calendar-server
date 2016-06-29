@@ -89,8 +89,8 @@ const createStatements = [`
     family TEXT,
     recipient TEXT,
     message TEXT,
-    created INTEGER DEFAULT (strftime('%s', 'now')), -- Needed to force integer
-    due INTEGER NOT NULL,
+    created INTEGER NOT NULL, -- in milliseconds
+    due INTEGER NOT NULL, -- in milliseconds
     status TEXT DEFAULT 'waiting'
   )
 `, `
