@@ -5,10 +5,6 @@ const expect = chakram.expect;
 const serverManager = require('./server_manager');
 const config = require('./config.js');
 
-function getCurrentTimestampInSeconds() {
-  return Math.floor(Date.now() / 1000);
-}
-
 function assertFullRemindersAreEqual(actual, expected,
   timestampBeforeCreation, timestampAfterCreation) {
   expect(actual.created).within(
@@ -26,7 +22,7 @@ describe('/reminders', function() {
   const initialReminder = {
     recipient: 'Jane',
     message: 'Pick up kids at school',
-    due: Date.now() + 2 * 60 * 60,
+    due: Date.now() + 2 * 60 * 60 * 1000,
   };
 
   serverManager.inject();
@@ -40,17 +36,17 @@ describe('/reminders', function() {
     const updatedReminder = {
       recipient: 'John',
       message: 'Go shopping',
-      due: Date.now() + 4 * 60 * 60,
+      due: Date.now() + 4 * 60 * 60 * 1000,
     };
     const expectedUpdatedReminder = Object.assign(
       {}, expectedReminder, updatedReminder
     );
 
 
-    const timestampBeforeCreation = getCurrentTimestampInSeconds();
+    const timestampBeforeCreation = Date.now();
 
     let res = yield chakram.post(remindersUrl, initialReminder);
-    const timestampAfterCreation = getCurrentTimestampInSeconds();
+    const timestampAfterCreation = Date.now();
     expect(res).status(201);
     expect(res).header('location', '/api/v1/reminders/1');
 

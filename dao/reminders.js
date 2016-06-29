@@ -29,7 +29,8 @@ function checkUpdateDelete(mode, id) {
 }
 
 module.exports = {
-  index(family, start = Math.floor(Date.now() / 1000), limit = 20) {
+  // TODO if start is not specified, we should return "waiting" reminders
+  index(family, start = Date.now(), limit = 20) {
 
     // force parameters as integer
     start = +start;
@@ -65,10 +66,11 @@ module.exports = {
     return database.ready
       .then(db => db.run(
         `INSERT INTO reminders
-          (recipient, message, due, family)
-          VALUES (?, ?, ?, ?)`,
+          (recipient, message, created, due, family)
+          VALUES (?, ?, ?, ?, ?)`,
           reminder.recipient,
           reminder.message,
+          Date.now(),
           reminder.due,
           family
       ))
@@ -113,16 +115,18 @@ module.exports = {
       .then(checkUpdateDelete('updated', reminderId));
   },
 
-  findAllDueReminders(nowInSeconds) {
+  findAllDueReminders(now) {
+    debug('findAllDueReminders(%d)', now);
     return database.ready.then(db =>
       db.all(
-        'SELECT * FROM reminders WHERE due > ? AND status = "waiting"',
-        nowInSeconds
+        'SELECT * FROM reminders WHERE due <= ? AND status = "waiting"',
+        now
       )
     );
   },
 
   setReminderStatus(id, status) {
+    debug('setReminderStatus(id=%d, status=%s)', id, status);
     return database.ready.then(db =>
       db.run(
         'UPDATE reminders SET status = ? WHERE id = ?',

@@ -105,8 +105,9 @@ module.exports = {
   },
 
   findSubscriptionsByFamily(family) {
+    debug('findSubscriptionsByFamily(%s)', family);
     return database.ready.then(
       db => db.all('SELECT * FROM subscriptions WHERE family = ?', family)
-    );
+    ).then(items => items.map(unflatten));
   }
 };

@@ -9,9 +9,9 @@ const login = require('./dao/login');
 const config = require('./config');
 
 require('./dao/database').init(config.profile);
+
 // Starts up the notification polling mechanism
 require('./business/notifications');
-
 
 const app = express();
 
