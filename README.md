@@ -188,3 +188,16 @@ These resources behave like you would expect. Few exceptions:
 * GET don't return `auth`. This value should remain secret.
 * PUT only allows you to modify the `title`.
 * DELETE removes the subscription.
+
+## Push notifications
+
+Push notifications are sent to endpoints when reminders are about to be due.
+
+For Chrome, the application needs to setup its `gcm_sender_id` in its manifest.
+This id needs to be generated in pair with the server's GCMApiKey on [Google's
+developer console](https://code.google.com/apis/console/).
+
+### Format of the payload
+
+This is the same format as [the reminder from the reminders API](#get-remindersid).
+
