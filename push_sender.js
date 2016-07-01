@@ -29,7 +29,7 @@ mq.on('message', function(message) {
       }
     );
   }).then(
-    () => daoReminders.setReminderStatus(message.reminder.id, 'done')
+    () => daoReminders.setReminderStatusIfNotError(message.reminder.id, 'done')
   ).catch((err) => {
     if (err.statusCode === 410) { // subscription gone
       const id = message.subscription.id;

@@ -133,5 +133,16 @@ module.exports = {
         status, id
       )
     );
+  },
+
+  // This method doesn't return an error if the status was in error before.
+  setReminderStatusIfNotError(id, status) {
+    debug('setReminderStatusIfNotError(id=%d, status=%s)', id, status);
+    return database.ready.then(db =>
+      db.run(
+        'UPDATE reminders SET status = ? WHERE id = ? AND status != "error"',
+        status, id
+      )
+    );
   }
 };
