@@ -1,14 +1,17 @@
 const path = require('path');
+const shush = require('shush');
+
 
 function getUserConfig() {
-  // TODO use strip-json-comments to simplify this code.
-  const USER_CONFIG_PATH = './config/config.js';
+  const USER_CONFIG_PATH = './config/config.json';
   let userConfig = {};
 
   try {
-    userConfig = require(USER_CONFIG_PATH);
+    userConfig = shush(USER_CONFIG_PATH);
   } catch (e) {
-    if (e.message !== `Cannot find module '${USER_CONFIG_PATH}'`) {
+    if (e.code === 'MODULE_NOT_FOUND') {
+      console.warn(`No config found at "${USER_CONFIG_PATH}". Continuing...`);
+    } else {
       throw e;
     }
   }
