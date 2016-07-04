@@ -12,6 +12,16 @@ nvm use
 
 User configuration can be set in `config/config.js`. Make a copy of `config/config.template.js` and follow instructions in the file.
 
+## Running the server
+
+The server is actually composed of 2 processes:
+* `app.js` is the main application implementing the REST API described below.
+* `push_sender.js` is responsible for sending the push notifications from a 0mq
+  queue created by `app.js`.
+
+You just need to run `npm start`. This should run both processes. Of course you
+need to run `npm i` first to install dependencies.
+
 
 ## API login
 
