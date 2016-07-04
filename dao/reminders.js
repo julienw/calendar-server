@@ -29,30 +29,42 @@ function checkUpdateDelete(mode, id) {
 }
 
 module.exports = {
-  // TODO if start is not specified, we should return "waiting" reminders
-  index(family, start = Date.now(), limit = 20) {
-
-    // force parameters as integer
-    start = +start;
-    limit = +limit;
-
-    debug('index family=%s start=%s limit=%s', family, start, limit);
-
-    if (Number.isNaN(start)) {
+  indexByStart(family, start, limit) {
+    if (typeof start !== 'number') {
       throw new InvalidInputError('invalid_type', '"start" should be a number');
     }
 
-    if (Number.isNaN(limit)) {
+    if (typeof limit !== 'number') {
       throw new InvalidInputError('invalid_type', '"limit" should be a number');
     }
 
-    let statement = 'SELECT * FROM reminders WHERE family = ? AND due > ?';
+    debug('indexByStart family=%s start=%s limit=%s', family, start, limit);
+
+    let statement = 'SELECT * FROM reminders WHERE family = ? AND due >= ?';
     const statementArgs = [ family, start ];
-    if (limit) {
+    if (limit) { // if limit is 0, it means no limit
       statement += ' LIMIT ?';
       statementArgs.push(limit);
     }
     debug('statement is %s', statement);
+    return database.ready
+      .then(db => db.all(statement, ...statementArgs));
+  },
+
+  indexByStatus(family, status, limit) {
+    if (typeof limit !== 'number') {
+      throw new InvalidInputError('invalid_type', '"limit" should be a number');
+    }
+
+    debug('indexByStatus family=%s status=%s', family, status);
+
+    let statement = 'SELECT * FROM reminders WHERE family = ? AND status = ?';
+    const statementArgs = [ family, status ];
+    if (limit) {
+      statement += ' LIMIT ?';
+      statementArgs.push(limit);
+    }
+
     return database.ready
       .then(db => db.all(statement, ...statementArgs));
   },

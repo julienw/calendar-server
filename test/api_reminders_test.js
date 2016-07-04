@@ -95,6 +95,7 @@ describe('/reminders', function() {
     res = yield chakram.get(remindersUrl);
     expect(res.body).lengthOf(2);
 
+    // now testing the limit parameter
     const promises = [];
     for (let i = 0; i < 20; i++) {
       promises.push(chakram.post(remindersUrl, initialReminder));
@@ -110,5 +111,54 @@ describe('/reminders', function() {
     res = yield chakram.get(`${remindersUrl}?limit=0`);
     expect(res.body).lengthOf(22);
     expect(res.body.every((reminder, i) => reminder.id === i + 1)).true;
+  });
+
+  it('GET /reminders?start', function*() {
+    const now = Date.now();
+    const firstReminder = Object.assign(
+      {}, initialReminder,
+      { due: now }
+    );
+    const secondReminder = Object.assign(
+      {}, initialReminder,
+      { due: now + 10 * 60 * 1000 }
+    );
+
+    yield Promise.all([
+      chakram.post(remindersUrl, firstReminder),
+      chakram.post(remindersUrl, secondReminder)
+    ]);
+
+    let res = yield chakram.get(remindersUrl);
+    expect(res).status(200);
+    expect(res.body).lengthOf(2);
+
+    res = yield chakram.get(`${remindersUrl}?start=${now}`);
+    expect(res).status(200);
+    expect(res.body).lengthOf(2);
+
+    res = yield chakram.get(`${remindersUrl}?start=${now + 1}`);
+    expect(res).status(200);
+    expect(res.body).lengthOf(1);
+
+    res = yield chakram.get(`${remindersUrl}?start=${now + 11 * 60 * 1000}`);
+    expect(res).status(200);
+    expect(res.body).deep.equal([]);
+
+    // now testing the limit parameter
+    const promises = [];
+    for (let i = 0; i < 20; i++) {
+      promises.push(chakram.post(remindersUrl, initialReminder));
+    }
+    yield Promise.all(promises);
+
+    res = yield chakram.get(`${remindersUrl}?start=0`);
+    expect(res.body).lengthOf(20);
+
+    res = yield chakram.get(`${remindersUrl}?start=0&limit=25`);
+    expect(res.body).lengthOf(22);
+
+    res = yield chakram.get(`${remindersUrl}?start=0&limit=0`);
+    expect(res.body).lengthOf(22);
   });
 });
