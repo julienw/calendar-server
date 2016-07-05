@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha",
     "lint": "eslint .",
-    "serve": "concurrently 'node app.js' 'node push_sender.js'"
+    "start": "concurrently 'node app.js' 'node push_sender.js'"
   },
   "author": "",
   "license": "MPL-2.0",
