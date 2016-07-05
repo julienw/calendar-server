@@ -21,7 +21,7 @@ module.exports = {
         '--httpPort', httpPort,
         '--profile', 'profiles/test',
         '--mqPort', mqPort,
-        '--notificationPoll', '1',
+        '--notificationPoll', '1000',
       ],
       { stdio: 'inherit' }
     );

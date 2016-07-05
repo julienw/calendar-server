@@ -11,8 +11,22 @@ function removeFamilyProperty(item) {
 }
 
 router.get('/', (req, res, next) => {
-  reminders.index(req.user.family, req.query.start, req.query.limit)
-  .then(rows => {
+  const start = parseInt(req.query.start);
+  let limit = parseInt(req.query.limit);
+  const family = req.user.family;
+
+  if (Number.isNaN(limit)) {
+    limit = 20;
+  }
+
+  let operationPromise;
+  if (Number.isNaN(start)) {
+    operationPromise = reminders.indexByStatus(family, 'waiting', limit);
+  } else {
+    operationPromise = reminders.indexByStart(family, start, limit);
+  }
+
+  operationPromise.then(rows => {
     // We don't want to expose the family in the API result
     res.send(rows.map(removeFamilyProperty));
   }).catch(next);
