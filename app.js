@@ -1,3 +1,5 @@
+process.env.DEBUG_FD = 1; // debug() echoes to stdout instead of stderr
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const compression = require('compression');

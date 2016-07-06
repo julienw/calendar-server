@@ -1,3 +1,5 @@
+process.env.DEBUG_FD = 1; // debug() echoes to stdout instead of stderr
+
 const debug = require('debug')('calendar-server:business/push_sender');
 const config = require('./config');
 const mq = require('zmq').socket('pull');
