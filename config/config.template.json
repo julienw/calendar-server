@@ -17,6 +17,13 @@
      the project root dir. Default to: profiles/development */
   // "profile": "profiles/development",
 
+
+  /* Secret phrase used to generate an JSON Web Token (used for login). For
+    reference, see: https://www.npmjs.com/package/jsonwebtoken. MUST BE CHANGED
+    FOR PRODUCTION PURPOSE. DEFAULT VALUE CAN BE USED FOR A DEV ENVIRONMENT.
+    Defaults to: some secret that you should configure */
+  // "authenticationSecret": "some secret that you should configure",
+
   /* Google Cloud Messaging key. Used to send notifications to Chrome.
      Generate a key here: https://code.google.com/apis/console/.
      NO DEFAULT VALUE */

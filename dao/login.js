@@ -1,10 +1,8 @@
 const debug = require('debug')('calendar-server:login');
-
 const jwt = require('jsonwebtoken');
 
+const config = require('../config');
 const { UnauthorizedError } = require('../utils/errors');
-
-const secret = 'some secret that you should configure';
 
 /**
  * @param {String} req.body.user Authenticating user
@@ -18,7 +16,9 @@ module.exports = function login(req, res, next) {
   // Wow much secure very safe
   // FIXME with a real user database
   if (password === 'password') {
-    const token = jwt.sign({ family: user }, secret, { expiresIn: '30d' });
+    const token = jwt.sign(
+      { family: user }, config.authenticationSecret, { expiresIn: '30d' }
+    );
     res.send({ token });
   } else {
     debug('Bad user/password specified: user=%s, password=%s', user, password);
