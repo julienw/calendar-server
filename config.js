@@ -31,7 +31,8 @@ const config = require('minimist')(
       httpPort: 3000,
       mqPort: 4000,
       notificationPoll: 60 * 1000,
-      profile: path.join(__dirname, 'profiles/development')
+      profile: path.join(__dirname, 'profiles/development'),
+      authenticationSecret: 'some secret that you should configure'
     }, getUserConfig())
   }
 );
