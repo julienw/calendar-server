@@ -1,28 +1,28 @@
 [{
-  "recipient": "Jane",
+  "recipients": ["Jane"],
   "action": "Pick up kids at school"
 }, {
-  "recipient": "John",
+  "recipients": ["John"],
   "action": "Do laundry"
 }, {
-  "recipient": "Matthew",
+  "recipients": ["Matthew"],
   "action": "Maw lawn"
 }, {
-  "recipient": "Jane",
+  "recipients": ["Jane"],
   "action": "Buy milk and stuff"
 }, {
-  "recipient": "Jane",
+  "recipients": ["Jane"],
   "action": "Go to car mechanics"
 }, {
-  "recipient": "Jane",
+  "recipients": ["Jane"],
   "action": "Pick up car"
 }, {
-  "recipient": "John",
+  "recipients": ["John"],
   "action": "Prepare kids for school trip"
 }, {
-  "recipient": "John",
+  "recipients": ["John"],
   "action": "Pick up kids at school"
 }, {
-  "recipient": "Matthew",
+  "recipients": ["Matthew"],
   "action": "Walk out dog"
 }]
