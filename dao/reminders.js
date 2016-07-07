@@ -1,9 +1,7 @@
 const debug = require('debug')('calendar-server:reminders');
 
 const database = require('./database');
-const {
-  InternalError, InvalidInputError, NotFoundError
-} = require('../utils/errors');
+const { InvalidInputError, NotFoundError } = require('../utils/errors');
 const {
   checkPropertyType, checkIsArray
 } = require('../utils/object_validator.js');
@@ -13,21 +11,6 @@ function notFoundError(id) {
     'reminder_not_found',
     `The reminder with id ${id} does not exist.`
   );
-}
-
-function checkUpdateDelete(mode, id) {
-  return result => {
-    if (result.changes === 0) {
-      throw notFoundError(id);
-    }
-
-    if (result.changes > 1) {
-      throw new InternalError(
-        'database_corrupted',
-        `More than 1 reminder has been ${mode} (id=${id}).`
-      );
-    }
-  };
 }
 
 function serializeRecipients(recipients) {
@@ -125,11 +108,10 @@ module.exports = {
   delete(family, id) {
     debug('delete(family=%s, id=%s)', family, id);
     return database.ready
-      .then(db => db.run(
-        'DELETE FROM reminders WHERE family = ? AND id = ?',
+      .then(db => db.delete(
+        'FROM reminders WHERE family = ? AND id = ?',
         family, id
-      ))
-      .then(checkUpdateDelete('deleted', id));
+      ));
   },
 
   update(family, id, updatedReminder) {
@@ -140,8 +122,8 @@ module.exports = {
     checkPropertyType(updatedReminder, 'due', 'number');
 
     return database.ready
-      .then(db => db.run(
-        `UPDATE reminders SET
+      .then(db => db.update(
+        `reminders SET
         recipients = ?,
         action = ?,
         due = ?
@@ -150,8 +132,7 @@ module.exports = {
         updatedReminder.action,
         updatedReminder.due,
         family, id
-      ))
-      .then(checkUpdateDelete('updated', id));
+      ));
   },
 
   findAllDueReminders(now) {
@@ -167,8 +148,8 @@ module.exports = {
   setReminderStatus(id, status) {
     debug('setReminderStatus(id=%d, status=%s)', id, status);
     return database.ready.then(db =>
-      db.run(
-        'UPDATE reminders SET status = ? WHERE id = ?',
+      db.update(
+        'reminders SET status = ? WHERE id = ?',
         status, id
       )
     );
@@ -178,8 +159,8 @@ module.exports = {
   setReminderStatusIfNotError(id, status) {
     debug('setReminderStatusIfNotError(id=%d, status=%s)', id, status);
     return database.ready.then(db =>
-      db.run(
-        'UPDATE reminders SET status = ? WHERE id = ? AND status != "error"',
+      db.update(
+        'reminders SET status = ? WHERE id = ? AND status != "error"',
         status, id
       )
     );
