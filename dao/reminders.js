@@ -38,7 +38,7 @@ module.exports = {
       throw new InvalidInputError('invalid_type', '"limit" should be a number');
     }
 
-    debug('indexByStart family=%s start=%s limit=%s', family, start, limit);
+    debug('indexByStart(family=%s, start=%s, limit=%s)', family, start, limit);
 
     let statement = 'SELECT * FROM reminders WHERE family = ? AND due >= ?';
     const statementArgs = [ family, start ];
@@ -46,7 +46,7 @@ module.exports = {
       statement += ' LIMIT ?';
       statementArgs.push(limit);
     }
-    debug('statement is %s', statement);
+    debug('statement is `%s`', statement);
     return database.ready
       .then(db => db.all(statement, ...statementArgs));
   },
@@ -56,7 +56,7 @@ module.exports = {
       throw new InvalidInputError('invalid_type', '"limit" should be a number');
     }
 
-    debug('indexByStatus family=%s status=%s', family, status);
+    debug('indexByStatus(family=%s, status=%s)', family, status);
 
     let statement = 'SELECT * FROM reminders WHERE family = ? AND status = ?';
     const statementArgs = [ family, status ];
@@ -70,7 +70,7 @@ module.exports = {
   },
 
   create(family, reminder) {
-    debug('create reminder %o for family %s', reminder, family);
+    debug('create(family=%s, reminder=%o)', family, reminder);
     checkPropertyType(reminder, 'recipient', 'string');
     checkPropertyType(reminder, 'message', 'string');
     checkPropertyType(reminder, 'due', 'number');
@@ -89,29 +89,29 @@ module.exports = {
       .then(result => result.lastId);
   },
 
-  show(family, reminderId) {
-    debug('show reminder #%s for family %s', reminderId, family);
+  show(family, id) {
+    debug('show(family=%s, id=%s)', family, id);
 
     return database.ready
       .then(db => db.get(
         'SELECT * FROM reminders WHERE family = ? AND id = ?',
-        family, reminderId
+        family, id
       ))
-      .then(row => row || Promise.reject(notFoundError(reminderId)));
+      .then(row => row || Promise.reject(notFoundError(id)));
   },
 
-  delete(family, reminderId) {
-    debug('delete reminder #%s for family %s', reminderId, family);
+  delete(family, id) {
+    debug('delete(family=%s, id=%s)', family, id);
     return database.ready
       .then(db => db.run(
         'DELETE FROM reminders WHERE family = ? AND id = ?',
-        family, reminderId
+        family, id
       ))
-      .then(checkUpdateDelete('deleted', reminderId));
+      .then(checkUpdateDelete('deleted', id));
   },
 
-  update(family, reminderId, updatedReminder) {
-    debug('update reminder #%s for family %s', reminderId, family);
+  update(family, id, updatedReminder) {
+    debug('update(family=%s, id=%s)', family, id);
     return database.ready
       .then(db => db.run(
         `UPDATE reminders SET
@@ -122,13 +122,13 @@ module.exports = {
         updatedReminder.recipient,
         updatedReminder.message,
         updatedReminder.due,
-        family, reminderId
+        family, id
       ))
-      .then(checkUpdateDelete('updated', reminderId));
+      .then(checkUpdateDelete('updated', id));
   },
 
   findAllDueReminders(now) {
-    debug('findAllDueReminders(%d)', now);
+    debug('findAllDueReminders(now=%d)', now);
     return database.ready.then(db =>
       db.all(
         'SELECT * FROM reminders WHERE due <= ? AND status = "waiting"',

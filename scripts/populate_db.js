@@ -15,13 +15,13 @@ const baseOptions = {
 const familyName = process.env.FAMILY || 'mozilla';
 
 function login() {
-  console.log('Logging in with user %s', familyName);
+  console.log('Logging in with user `%s`', familyName);
   return request.post({
     url: `${baseUrl}/login`,
     json: true,
     body: { user: familyName, password: 'password' }
   }).then(res => {
-    console.log('... authenticated with token %s', res.token);
+    console.log('... authenticated with token `%s`', res.token);
     baseOptions.headers = {
       Authorization: `Bearer ${res.token}`
     };

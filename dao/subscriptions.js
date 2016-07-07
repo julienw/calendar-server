@@ -43,7 +43,7 @@ function unflatten(item) {
 
 module.exports = {
   index(family) {
-    debug('index family=%s', family);
+    debug('index(family=%s)', family);
     return database.ready
       .then(
         db => db.all('SELECT * FROM subscriptions WHERE family = ?', family)
@@ -51,7 +51,7 @@ module.exports = {
   },
 
   create(family, subscription) {
-    debug('create subscription %o for family %s', subscription, family);
+    debug('create(family=%s, subscription=%o)', subscription, family);
     checkPropertyType(subscription, 'subscription', 'object');
     checkPropertyType(subscription.subscription, 'keys', 'object');
 
@@ -69,43 +69,43 @@ module.exports = {
       .then(result => result.lastId);
   },
 
-  show(family, subscriptionId) {
-    debug('show subscription #%s for family %s', subscriptionId, family);
+  show(family, id) {
+    debug('show(family=%s, id=%s)', family, id);
 
     return database.ready
       .then(db => db.get(
         'SELECT * FROM subscriptions WHERE family = ? AND id = ?',
-        family, subscriptionId
+        family, id
       ))
-      .then(row => row || Promise.reject(notFoundError(subscriptionId)))
+      .then(row => row || Promise.reject(notFoundError(id)))
       .then(unflatten);
   },
 
-  delete(family, subscriptionId) {
-    debug('delete subscription #%s for family %s', subscriptionId, family);
+  delete(family, id) {
+    debug('delete(family=%s, id=%s)', family, id);
     return database.ready
       .then(db => db.run(
         'DELETE FROM subscriptions WHERE family = ? AND id = ?',
-        family, subscriptionId
+        family, id
       ))
-      .then(checkUpdateDelete('deleted', subscriptionId));
+      .then(checkUpdateDelete('deleted', id));
   },
 
-  update(family, subscriptionId, updatedSubscription) {
-    debug('update subscription #%s for family %s', subscriptionId, family);
+  update(family, id, updatedSubscription) {
+    debug('update(family=%s, id=%s)', family, id);
     return database.ready
       .then(db => db.run(
         `UPDATE subscriptions SET
         title = ?
         WHERE family = ? AND id = ?`,
         updatedSubscription.title,
-        family, subscriptionId
+        family, id
       ))
-      .then(checkUpdateDelete('updated', subscriptionId));
+      .then(checkUpdateDelete('updated', id));
   },
 
   findSubscriptionsByFamily(family) {
-    debug('findSubscriptionsByFamily(%s)', family);
+    debug('findSubscriptionsByFamily(family=%s)', family);
     return database.ready.then(
       db => db.all('SELECT * FROM subscriptions WHERE family = ?', family)
     ).then(items => items.map(unflatten));

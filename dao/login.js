@@ -21,7 +21,7 @@ module.exports = function login(req, res, next) {
     );
     res.send({ token });
   } else {
-    debug('Bad user/password specified: user=%s, password=%s', user, password);
+    debug('Bad creds specified: user=`%s`, password=`%s`', user, password);
     next(new UnauthorizedError(
       'invalid_credentials', 'Invalid credentials were specified'
     ));

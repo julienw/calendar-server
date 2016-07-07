@@ -35,7 +35,7 @@ mq.on('message', function(message) {
   ).catch((err) => {
     if (err.statusCode === 410) { // subscription gone
       const id = message.subscription.id;
-      debug(`Subscription #${id} deleted (was gone)`);
+      debug('Subscription #%s deleted (was gone)', id);
       return daoSubscriptions.delete(message.reminder.family, id);
     }
 
