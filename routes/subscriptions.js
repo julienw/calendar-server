@@ -12,8 +12,16 @@ function hidePrivateData(item) {
 }
 
 router.post('/', function(req, res, next) {
-  subscriptions.create(req.user.family, req.body).then((id) => {
-    res.status(201).location(`${req.baseUrl}/${id}`).end();
+  const family = req.user.family;
+  subscriptions.create(family, req.body).then((id) => {
+    debug('Subscription #%s has been created in database', id);
+
+    return subscriptions.show(family, id);
+  }).then((subscription) => {
+    res
+      .status(201)
+      .location(`${req.baseUrl}/${subscription.id}`)
+      .send(hidePrivateData(subscription));
   }).catch(next);
 });
 
@@ -37,9 +45,15 @@ router.route('/:id')
     .catch(next);
   })
   .put((req, res, next) => {
-    subscriptions.update(req.user.family, req.params.id, req.body)
-    .then(() => res.status(204).end())
-    .catch(next);
+    const family = req.user.family;
+    const id = req.params.id;
+
+    subscriptions.update(family, id, req.body)
+    .then(() => subscriptions.show(family, id))
+    .then((subscription) => {
+      debug('Updated subscription %o', subscription);
+      res.send(hidePrivateData(subscription));
+    }).catch(next);
   });
 
 module.exports = router;
