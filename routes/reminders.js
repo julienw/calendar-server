@@ -39,6 +39,7 @@ router.post('/', (req, res, next) => {
 
     return reminders.show(family, id);
   }).then((reminder) => {
+    debug('Reminder #%s is: %o', reminder.id, reminder);
     res
       .status(201)
       .location(`${req.baseUrl}/${reminder.id}`)
@@ -67,6 +68,7 @@ router.route('/:id')
 
       return reminders.show(family, id);
     }).then((reminder) => {
+      debug('Reminder #%s has been updated: %o', id, reminder);
       res.send(removeFamilyProperty(reminder));
     }).catch(next);
   });
