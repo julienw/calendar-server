@@ -4,7 +4,9 @@ const database = require('./database');
 const {
   InternalError, InvalidInputError, NotFoundError
 } = require('../utils/errors');
-const { checkPropertyType } = require('../utils/object_validator.js');
+const {
+  checkPropertyType, checkIsArray
+} = require('../utils/object_validator.js');
 
 function notFoundError(id) {
   return new NotFoundError(
@@ -29,13 +31,11 @@ function checkUpdateDelete(mode, id) {
 }
 
 function serializeRecipients(recipients) {
-  return recipients && recipients.length > 0
-    ? recipients.join('|')
-    : '';
+  return JSON.stringify(recipients);
 }
 
 function deserializeRecipients(recipients) {
-  return recipients.split('|');
+  return JSON.parse(recipients);
 }
 
 function deserialize(reminder) {
@@ -88,7 +88,8 @@ module.exports = {
 
   create(family, reminder) {
     debug('create(family=%s, reminder=%o)', family, reminder);
-    checkPropertyType(reminder, 'recipients', 'object');
+
+    checkIsArray(reminder, 'recipients', 1);
     checkPropertyType(reminder, 'action', 'string');
     checkPropertyType(reminder, 'due', 'number');
 
@@ -114,10 +115,11 @@ module.exports = {
         'SELECT * FROM reminders WHERE family = ? AND id = ?',
         family, id
       ))
-      .then(function(reminder) {
-        return reminder ? deserialize(reminder)
-          : Promise.reject(notFoundError(id));
-      });
+      .then(reminder => (
+        reminder
+          ? deserialize(reminder)
+          : Promise.reject(notFoundError(id))
+      ));
   },
 
   delete(family, id) {
@@ -132,6 +134,11 @@ module.exports = {
 
   update(family, id, updatedReminder) {
     debug('update(family=%s, id=%s)', family, id);
+
+    checkIsArray(updatedReminder, 'recipients', 1);
+    checkPropertyType(updatedReminder, 'action', 'string');
+    checkPropertyType(updatedReminder, 'due', 'number');
+
     return database.ready
       .then(db => db.run(
         `UPDATE reminders SET

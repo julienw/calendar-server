@@ -75,7 +75,7 @@ describe('/reminders', function() {
     let res = yield chakram.get(location);
     expect(res).status(404);
 
-    res = yield chakram.put(location, {});
+    res = yield chakram.put(location, initialReminder);
     expect(res).status(404);
 
     res = yield chakram.delete(location);

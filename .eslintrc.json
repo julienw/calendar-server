@@ -109,7 +109,7 @@
     "arrow-body-style": 2,
     "arrow-spacing": 2,
     "constructor-super": 2,
-    "no-confusing-arrow": 2,
+    "no-confusing-arrow": [2, { "allowParens": true }],
     "no-constant-condition": 2,
     "no-class-assign": 2,
     "no-const-assign": 2,
