@@ -12,8 +12,16 @@ function hidePrivateData(item) {
 }
 
 router.post('/', function(req, res, next) {
-  subscriptions.create(req.user.family, req.body).then((id) => {
-    res.status(201).location(`${req.baseUrl}/${id}`).end();
+  const family = req.user.family;
+  subscriptions.create(family, req.body).then((id) => {
+    debug('Subscription #%s has been created in database', id);
+
+    return subscriptions.show(family, id);
+  }).then((subscription) => {
+    res
+      .status(201)
+      .location(`${req.baseUrl}/${subscription.id}`)
+      .send(hidePrivateData(subscription));
   }).catch(next);
 });
 
