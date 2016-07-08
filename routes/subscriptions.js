@@ -45,9 +45,15 @@ router.route('/:id')
     .catch(next);
   })
   .put((req, res, next) => {
-    subscriptions.update(req.user.family, req.params.id, req.body)
-    .then(() => res.status(204).end())
-    .catch(next);
+    const family = req.user.family;
+    const id = req.params.id;
+
+    subscriptions.update(family, id, req.body)
+    .then(() => subscriptions.show(family, id))
+    .then((subscription) => {
+      debug('Updated subscription %o', subscription);
+      res.send(hidePrivateData(subscription));
+    }).catch(next);
   });
 
 module.exports = router;
