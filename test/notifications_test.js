@@ -44,15 +44,15 @@ describe('notifications', function() {
 
 
   const inputs = [{
-    recipient: 'Jane',
+    recipients: ['Jane'],
     action: 'Pick up kids at school',
     due: Date.now(),
   }, {
-    recipient: 'John',
+    recipients: ['John'],
     action: 'Buy milk',
     due: Date.now(),
   }, {
-    recipient: 'David',
+    recipients: ['David'],
     action: 'Go to school',
     due: Date.now(),
   }];

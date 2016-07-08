@@ -4,7 +4,9 @@ const database = require('./database');
 const {
   InternalError, InvalidInputError, NotFoundError
 } = require('../utils/errors');
-const { checkPropertyType } = require('../utils/object_validator.js');
+const {
+  checkPropertyType, checkIsArray
+} = require('../utils/object_validator.js');
 
 function notFoundError(id) {
   return new NotFoundError(
@@ -28,6 +30,19 @@ function checkUpdateDelete(mode, id) {
   };
 }
 
+function serializeRecipients(recipients) {
+  return JSON.stringify(recipients);
+}
+
+function deserializeRecipients(recipients) {
+  return JSON.parse(recipients);
+}
+
+function deserialize(reminder) {
+  reminder.recipients = deserializeRecipients(reminder.recipients);
+  return reminder;
+}
+
 module.exports = {
   indexByStart(family, start, limit) {
     if (typeof start !== 'number') {
@@ -48,7 +63,8 @@ module.exports = {
     }
     debug('statement is `%s`', statement);
     return database.ready
-      .then(db => db.all(statement, ...statementArgs));
+      .then(db => db.all(statement, ...statementArgs))
+      .then(reminders => reminders.map(deserialize));
   },
 
   indexByStatus(family, status, limit) {
@@ -66,21 +82,23 @@ module.exports = {
     }
 
     return database.ready
-      .then(db => db.all(statement, ...statementArgs));
+      .then(db => db.all(statement, ...statementArgs))
+      .then(reminders => reminders.map(deserialize));
   },
 
   create(family, reminder) {
     debug('create(family=%s, reminder=%o)', family, reminder);
-    checkPropertyType(reminder, 'recipient', 'string');
+
+    checkIsArray(reminder, 'recipients', 1);
     checkPropertyType(reminder, 'action', 'string');
     checkPropertyType(reminder, 'due', 'number');
 
     return database.ready
       .then(db => db.run(
         `INSERT INTO reminders
-          (recipient, action, created, due, family)
+          (recipients, action, created, due, family)
           VALUES (?, ?, ?, ?, ?)`,
-          reminder.recipient,
+          serializeRecipients(reminder.recipients),
           reminder.action,
           Date.now(),
           reminder.due,
@@ -97,7 +115,11 @@ module.exports = {
         'SELECT * FROM reminders WHERE family = ? AND id = ?',
         family, id
       ))
-      .then(row => row || Promise.reject(notFoundError(id)));
+      .then(reminder => (
+        reminder
+          ? deserialize(reminder)
+          : Promise.reject(notFoundError(id))
+      ));
   },
 
   delete(family, id) {
@@ -112,14 +134,19 @@ module.exports = {
 
   update(family, id, updatedReminder) {
     debug('update(family=%s, id=%s)', family, id);
+
+    checkIsArray(updatedReminder, 'recipients', 1);
+    checkPropertyType(updatedReminder, 'action', 'string');
+    checkPropertyType(updatedReminder, 'due', 'number');
+
     return database.ready
       .then(db => db.run(
         `UPDATE reminders SET
-        recipient = ?,
+        recipients = ?,
         action = ?,
         due = ?
         WHERE family = ? AND id = ?`,
-        updatedReminder.recipient,
+        serializeRecipients(updatedReminder.recipients),
         updatedReminder.action,
         updatedReminder.due,
         family, id
@@ -134,7 +161,7 @@ module.exports = {
         'SELECT * FROM reminders WHERE due <= ? AND status = "waiting"',
         now
       )
-    );
+    ).then(reminders => reminders.map(deserialize));
   },
 
   setReminderStatus(id, status) {

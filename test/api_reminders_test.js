@@ -20,7 +20,7 @@ describe('/reminders', function() {
   const remindersUrl = `${config.apiRoot}/reminders`;
 
   const initialReminder = {
-    recipient: 'Jane',
+    recipients: ['Jane'],
     action: 'Pick up kids at school',
     due: Date.now() + 2 * 60 * 60 * 1000,
   };
@@ -34,7 +34,7 @@ describe('/reminders', function() {
       initialReminder
     );
     const updatedReminder = {
-      recipient: 'John',
+      recipients: ['John'],
       action: 'Go shopping',
       due: Date.now() + 4 * 60 * 60 * 1000,
     };
@@ -75,7 +75,7 @@ describe('/reminders', function() {
     let res = yield chakram.get(location);
     expect(res).status(404);
 
-    res = yield chakram.put(location, {});
+    res = yield chakram.put(location, initialReminder);
     expect(res).status(404);
 
     res = yield chakram.delete(location);
