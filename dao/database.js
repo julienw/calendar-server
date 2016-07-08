@@ -59,7 +59,7 @@ function run(...args) {
 }
 
 function safeUpdateOrDelete(mode, ...args) {
-  args[0] = `${mode.toUpperCase()} ${args[0]}`;
+  args[0] = `${mode} ${args[0]}`;
   debug('statement: `%s`', args[0]);
 
   return run(...args).then((result) => {
@@ -92,9 +92,7 @@ const promisedDb = {
     });
   },
 
-  run(...args) {
-    return run(...args);
-  },
+  run,
 
   get(...args) {
     return new Promise((resolve, reject) => {
