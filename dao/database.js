@@ -134,7 +134,7 @@ const createStatements = [`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     family TEXT,
     title TEXT,
-    endpoint TEXT,
+    endpoint TEXT UNIQUE,
     p256dh TEXT,
     auth TEXT
   )

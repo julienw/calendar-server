@@ -11,6 +11,13 @@ function notFoundError(id) {
   );
 }
 
+function endpointNotFoundError(endpoint) {
+  return new NotFoundError(
+    'subscription_not_found',
+    `The subscription with endpoint ${endpoint} does not exist.`
+  );
+}
+
 function unflatten(item) {
   return {
     id: item.id,
@@ -63,6 +70,17 @@ module.exports = {
         family, id
       ))
       .then(row => row || Promise.reject(notFoundError(id)))
+      .then(unflatten);
+  },
+
+  findByEndpoint(family, endpoint) {
+    debug('findByEndpoint(family=%s, endpoint=%s)', family, endpoint);
+    return database.ready
+      .then(db => db.get(
+        'SELECT * FROM subscriptions WHERE family = ? AND endpoint = ?',
+        family, endpoint
+      ))
+      .then(row => row || Promise.reject(endpointNotFoundError(endpoint)))
       .then(unflatten);
   },
 
