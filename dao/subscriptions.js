@@ -1,7 +1,7 @@
 const debug = require('debug')('calendar-server:subscriptions');
 
 const database = require('./database');
-const { InternalError, NotFoundError } = require('../utils/errors');
+const { NotFoundError } = require('../utils/errors');
 const { checkPropertyType } = require('../utils/object_validator.js');
 
 function notFoundError(id) {
@@ -9,21 +9,6 @@ function notFoundError(id) {
     'subscription_not_found',
     `The subscription with id ${id} does not exist.`
   );
-}
-
-function checkUpdateDelete(mode, id) {
-  return result => {
-    if (result.changes === 0) {
-      throw notFoundError(id);
-    }
-
-    if (result.changes > 1) {
-      throw new InternalError(
-        'database_corrupted',
-        `More than 1 reminder has been ${mode} (id=${id}).`
-      );
-    }
-  };
 }
 
 function unflatten(item) {
@@ -84,24 +69,22 @@ module.exports = {
   delete(family, id) {
     debug('delete(family=%s, id=%s)', family, id);
     return database.ready
-      .then(db => db.run(
-        'DELETE FROM subscriptions WHERE family = ? AND id = ?',
+      .then(db => db.delete(
+        'FROM subscriptions WHERE family = ? AND id = ?',
         family, id
-      ))
-      .then(checkUpdateDelete('deleted', id));
+      ));
   },
 
   update(family, id, updatedSubscription) {
     debug('update(family=%s, id=%s)', family, id);
     return database.ready
-      .then(db => db.run(
-        `UPDATE subscriptions SET
+      .then(db => db.update(
+        `subscriptions SET
         title = ?
         WHERE family = ? AND id = ?`,
         updatedSubscription.title,
         family, id
-      ))
-      .then(checkUpdateDelete('updated', id));
+      ));
   },
 
   findSubscriptionsByFamily(family) {
