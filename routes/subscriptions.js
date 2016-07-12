@@ -18,7 +18,7 @@ router.post('/', function(req, res, next) {
   const endpoint = req.body.subscription.endpoint;
   subscriptions.findByEndpoint(family, endpoint).then((subscription) => {
     // This endpoint is already in the DB
-    throw new DuplicateEndpointError( // will generate a status "409"
+    throw new DuplicateEndpointError( // will generate a status "409 Conflict"
       'duplicate_endpoint',
       `A subscription with endpoint "${endpoint}" is already registered.`,
       hidePrivateData(subscription)
