@@ -2,6 +2,7 @@ const debug = require('debug')('calendar-server:routes/subscriptions');
 
 const express = require('express');
 const subscriptions = require('../dao/subscriptions');
+const { DuplicateEndpointError, NotFoundError } = require('../utils/errors');
 
 const router = express.Router();
 
@@ -13,15 +14,33 @@ function hidePrivateData(item) {
 
 router.post('/', function(req, res, next) {
   const family = req.user.family;
-  subscriptions.create(family, req.body).then((id) => {
-    debug('Subscription #%s has been created in database', id);
 
-    return subscriptions.show(family, id);
-  }).then((subscription) => {
-    res
-      .status(201)
-      .location(`${req.baseUrl}/${subscription.id}`)
-      .send(hidePrivateData(subscription));
+  const endpoint = req.body.subscription.endpoint;
+  subscriptions.findByEndpoint(family, endpoint).then((subscription) => {
+    // This endpoint is already in the DB
+    throw new DuplicateEndpointError( // will generate a status "409 Conflict"
+      'duplicate_endpoint',
+      `A subscription with endpoint "${endpoint}" is already registered.`,
+      hidePrivateData(subscription)
+    );
+  },
+  (err) => {
+    if (!(err instanceof NotFoundError)) {
+      throw err;
+    }
+
+    // This endpoint does not exist yet, let's create it
+
+    return subscriptions.create(family, req.body).then((id) => {
+      debug('Subscription #%s has been created in database', id);
+
+      return subscriptions.show(family, id);
+    }).then((subscription) => {
+      res
+        .status(201)
+        .location(`${req.baseUrl}/${subscription.id}`)
+        .send(hidePrivateData(subscription));
+    });
   }).catch(next);
 });
 

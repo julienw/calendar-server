@@ -45,9 +45,17 @@ app.use((err, req, res, _next) => {
     default: console.error(err.stack);
   }
 
-  res.status(err.status || 500).send(
-    { error: err.name, code: err.code, message: err.message }
-  );
+  const errorMessage = {
+    error: err.name,
+    code: err.code,
+    message: err.message,
+  };
+
+  if (err.data) {
+    errorMessage.data = err.data;
+  }
+
+  res.status(err.status || 500).send(errorMessage);
 });
 
 app.listen(config.httpPort, () => {

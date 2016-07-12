@@ -51,11 +51,22 @@ describe('/subscriptions', function() {
 
   it('should implement basic CRUD functionality', function*() {
     const expectedLocation = `${subscriptionsUrl}/1`;
+    const endpoint = initialSubscription.subscription.endpoint;
 
     let res = yield chakram.post(subscriptionsUrl, initialSubscription);
     expect(res).status(201);
     expect(res).header('location', '/api/v1/subscriptions/1');
     expect(res.body).deep.equal(expectedSubscription);
+
+    res = yield chakram.post(subscriptionsUrl, initialSubscription);
+    expect(res).status(409);
+    expect(res.body).deep.equal({
+      error: 'DuplicateEndpointError',
+      code: 'duplicate_endpoint',
+      message:
+        `A subscription with endpoint "${endpoint}" is already registered.`,
+      data: expectedSubscription
+    });
 
     res = yield chakram.get(subscriptionsUrl);
     expect(res).status(200);
