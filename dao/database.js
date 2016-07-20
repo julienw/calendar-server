@@ -160,7 +160,14 @@ function init(profileDir) {
   }).then(readyDeferred.resolve, readyDeferred.reject);
 }
 
+function close() {
+  return new Promise((resolve, reject) => {
+    db.close((err) => (err ? reject(err) : resolve()));
+  });
+}
+
 module.exports = {
   init,
+  close,
   ready: readyDeferred.promise.then(() => promisedDb)
 };
