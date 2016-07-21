@@ -7,10 +7,7 @@ const {
 } = require('../utils/object_validator.js');
 
 function notFoundError(id) {
-  return new NotFoundError(
-    'reminder_not_found',
-    `The reminder with id ${id} does not exist.`
-  );
+  return NotFoundError.createWithSubject('reminder', { name: 'id', value: id });
 }
 
 function serializeRecipients(recipients) {
