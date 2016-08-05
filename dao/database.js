@@ -8,6 +8,16 @@ const { InternalError, NotFoundError } = require('../utils/errors');
 
 let db;
 
+function nodeToPromise(resolve, reject) {
+  return function(err, res) {
+    if (err) {
+      reject(err);
+      return;
+    }
+    resolve(res);
+  };
+}
+
 function run(...args) {
   return new Promise((resolve, reject) => {
     // Cannot use arrow function because `this` is set by the caller
@@ -44,29 +54,23 @@ function safeUpdateOrDelete(mode, ...args) {
 
 const promisedDb = {
   all(...args) {
-    return new Promise((resolve, reject) => {
-      db.all(...args, (err, rows) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(rows);
-      });
-    });
+    return new Promise(
+      (resolve, reject) => db.all(...args, nodeToPromise(resolve, reject))
+    );
   },
 
   run,
 
+  exec(statement) {
+    return new Promise(
+      (resolve, reject) => db.exec(statement, nodeToPromise(resolve, reject))
+    );
+  },
+
   get(...args) {
-    return new Promise((resolve, reject) => {
-      db.get(...args, (err, row) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(row);
-      });
-    });
+    return new Promise(
+      (resolve, reject) => db.get(...args, nodeToPromise(resolve, reject))
+    );
   },
 
   update(...args) {
@@ -80,28 +84,91 @@ const promisedDb = {
 
 const readyDeferred = deferred();
 
-const createStatements = [`
+// NOTE: members_reminders(member_id) has no ON DELETE CASCADE because we need
+// to manually cascade to reminders if there is no more recipients associated to
+// a reminder.
+const createStatements =
+`
+  CREATE TABLE IF NOT EXISTS families
+  (
+    name TEXT PRIMARY KEY
+  );
+
+  CREATE TABLE IF NOT EXISTS members
+  (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    family TEXT NOT NULL
+      REFERENCES families(name)
+      ON UPDATE CASCADE
+      ON DELETE CASCADE
+      DEFERRABLE INITIALLY DEFERRED,
+    name TEXT NOT NULL,
+    UNIQUE (family, name)
+  );
+
+  CREATE TABLE IF NOT EXISTS members_families
+  (
+    member_id INTEGER NOT NULL
+      REFERENCES members(id)
+      ON UPDATE CASCADE
+      ON DELETE CASCADE
+      DEFERRABLE INITIALLY DEFERRED,
+    family_name TEXT NOT NULL
+      REFERENCES families(name)
+      ON UPDATE CASCADE
+      ON DELETE CASCADE
+      DEFERRABLE INITIALLY DEFERRED,
+    accepted BOOLEAN,
+    PRIMARY KEY (member_id, family_name)
+  );
+  CREATE INDEX IF NOT EXISTS members_families_family
+    ON members_families (family_name);
+
   CREATE TABLE IF NOT EXISTS reminders
   (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    family TEXT,
-    recipients TEXT,
     action TEXT,
     created INTEGER NOT NULL, -- in milliseconds
     due INTEGER NOT NULL, -- in milliseconds
     status TEXT DEFAULT 'waiting'
-  )
-`, `
+  );
+  CREATE INDEX IF NOT EXISTS reminders_due
+    ON reminders(due);
+  CREATE INDEX IF NOT EXISTS reminders_status
+    ON reminders(status);
+
+  CREATE TABLE IF NOT EXISTS members_reminders
+  (
+    member_id INTEGER NOT NULL
+      REFERENCES members(id)
+      ON UPDATE CASCADE
+      DEFERRABLE INITIALLY DEFERRED,
+    reminder_id INTEGER NOT NULL
+      REFERENCES reminders(id)
+      ON UPDATE CASCADE
+      ON DELETE CASCADE
+      DEFERRABLE INITIALLY DEFERRED,
+    PRIMARY KEY (member_id, reminder_id)
+  );
+  CREATE INDEX IF NOT EXISTS members_reminders_reminder_id
+    ON members_reminders(reminder_id);
+
   CREATE TABLE IF NOT EXISTS subscriptions
   (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    family TEXT,
+    member_id INTEGER NOT NULL
+      REFERENCES members(id)
+      ON UPDATE CASCADE
+      ON DELETE CASCADE
+      DEFERRABLE INITIALLY DEFERRED,
     title TEXT,
     endpoint TEXT UNIQUE,
     p256dh TEXT,
     auth TEXT
-  )
-`];
+  );
+  CREATE INDEX IF NOT EXISTS subscriptions_member_id
+    ON subscriptions(member_id);
+`;
 
 function init(profileDir) {
   const dbPath = path.join(profileDir, 'reminders.db');
@@ -114,15 +181,14 @@ function init(profileDir) {
   // please do so :)
   return new Promise((resolve, reject) => {
     db = new sqlite3.Database(dbPath, (err) => (err ? reject(err) : resolve()));
-  }).then(() => {
-    const promises = createStatements.map(
-      statement => promisedDb.run(statement)
-    );
-    return Promise.all(promises);
-  }).then(readyDeferred.resolve, readyDeferred.reject)
-    .catch((err) => {
+  }).then(
+    () => promisedDb.exec(createStatements)
+  ).then(
+    readyDeferred.resolve,
+    (err) => {
       console.error(`Error while initializing the sqlite database. \
 database.ready might not be ever resolved. Error: ${err}`);
+      readyDeferred.reject(err);
       throw err;
     });
 }
