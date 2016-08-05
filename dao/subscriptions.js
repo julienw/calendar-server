@@ -19,7 +19,7 @@ function endpointNotFoundError(endpoint) {
 function unflatten(item) {
   return {
     id: item.id,
-    family: item.family,
+    userId: item.user_id,
     title: item.title,
     subscription: {
       endpoint: item.endpoint,
@@ -32,25 +32,25 @@ function unflatten(item) {
 }
 
 module.exports = {
-  index(family) {
-    debug('index(family=%s)', family);
+  findByUserId(userId) {
+    debug('index(userId=%s)', userId);
     return database.ready
       .then(
-        db => db.all('SELECT * FROM subscriptions WHERE family = ?', family)
+        db => db.all('SELECT * FROM subscription WHERE user_id = ?', userId)
       ).then(items => items.map(unflatten));
   },
 
-  create(family, subscription) {
-    debug('create(family=%s, subscription=%o)', family, subscription);
+  create(userId, subscription) {
+    debug('create(userId=%s, subscription=%o)', userId, subscription);
     checkPropertyType(subscription, 'subscription', 'object');
     checkPropertyType(subscription.subscription, 'keys', 'object');
 
     return database.ready
       .then(db => db.run(
-        `INSERT INTO subscriptions
-          (family, title, endpoint, p256dh, auth)
+        `INSERT INTO subscription
+          (user_id, title, endpoint, p256dh, auth)
           VALUES (?, ?, ?, ?, ?)`,
-          family,
+          userId,
           subscription.title,
           subscription.subscription.endpoint,
           subscription.subscription.keys.p256dh,
@@ -59,54 +59,66 @@ module.exports = {
       .then(result => result.lastId);
   },
 
-  show(family, id) {
-    debug('show(family=%s, id=%s)', family, id);
+  show(userId, id) {
+    debug('show(userId=%s, id=%s)', userId, id);
 
     return database.ready
       .then(db => db.get(
-        'SELECT * FROM subscriptions WHERE family = ? AND id = ?',
-        family, id
+        'SELECT * FROM subscription WHERE user_id = ? AND id = ?',
+        userId, id
       ))
       .then(row => row || Promise.reject(notFoundError(id)))
       .then(unflatten);
   },
 
-  findByEndpoint(family, endpoint) {
-    debug('findByEndpoint(family=%s, endpoint=%s)', family, endpoint);
+  findByEndpoint(userId, endpoint) {
+    debug('findByEndpoint(userId=%s, endpoint=%s)', userId, endpoint);
     return database.ready
       .then(db => db.get(
-        'SELECT * FROM subscriptions WHERE family = ? AND endpoint = ?',
-        family, endpoint
+        'SELECT * FROM subscription WHERE user_id = ? AND endpoint = ?',
+        userId, endpoint
       ))
       .then(row => row || Promise.reject(endpointNotFoundError(endpoint)))
       .then(unflatten);
   },
 
-  delete(family, id) {
-    debug('delete(family=%s, id=%s)', family, id);
+  findForReminder(reminderId) {
+    debug('findForReminder(reminderId=%s)', reminderId);
+
+    /* LEFT JOIN lets us getting "null" for subscription data if it's
+     * non-existent. */
+    return database.ready
+      .then(db => db.all(
+        `SELECT subscription.*, user_reminder.user_id user_id
+         FROM reminder, user_reminder
+         LEFT JOIN subscription
+          ON subscription.user_id = user_reminder.user_id
+        WHERE
+          user_reminder.reminder_id = ?
+        `, reminderId
+      ))
+      .then(rows => rows.map(unflatten));
+  },
+
+  delete(userId, id) {
+    debug('delete(userId=%s, id=%s)', userId, id);
     return database.ready
       .then(db => db.delete(
-        'FROM subscriptions WHERE family = ? AND id = ?',
-        family, id
+        'FROM subscription WHERE user_id = ? AND id = ?',
+        userId, id
       ));
   },
 
-  update(family, id, updatedSubscription) {
-    debug('update(family=%s, id=%s)', family, id);
+  update(userId, id, updatedSubscription) {
+    debug('update(userId=%s, id=%s)', userId, id);
     return database.ready
       .then(db => db.update(
-        `subscriptions SET
+        `subscription SET
         title = ?
-        WHERE family = ? AND id = ?`,
+        WHERE user_id = ? AND id = ?`,
         updatedSubscription.title,
-        family, id
+        userId, id
       ));
   },
 
-  findSubscriptionsByFamily(family) {
-    debug('findSubscriptionsByFamily(family=%s)', family);
-    return database.ready.then(
-      db => db.all('SELECT * FROM subscriptions WHERE family = ?', family)
-    ).then(items => items.map(unflatten));
-  }
 };

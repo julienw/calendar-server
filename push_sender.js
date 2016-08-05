@@ -42,7 +42,7 @@ mq.on('message', function(message) {
     if (err.statusCode === 410) { // subscription gone
       const id = message.subscription.id;
       debug('Subscription #%s deleted (was gone)', id);
-      return daoSubscriptions.delete(message.reminder.family, id);
+      return daoSubscriptions.delete(id);
     }
 
     console.error('PushSender: Unhandled error', err);

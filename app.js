@@ -7,7 +7,6 @@ const cors = require('cors');
 
 const jwt = require('express-jwt');
 
-const login = require('./dao/login');
 const config = require('./config');
 const database = require('./dao/database');
 const notificationsSender = require('./business/notifications');
@@ -27,19 +26,29 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.options('*', cors()); // include before other routes
 
 // first check if the requested resource is the login.
-app.post(`${API_ROOT}/login`, login);
+app.post(`${API_ROOT}/login`, require('./routes/login'));
 
 // redirect if we're not logged in
-app.use(jwt({ secret: config.authenticationSecret }));
+app.use(
+  jwt({ secret: config.authenticationSecret })
+    .unless({ path: [ { url: `${API_ROOT}/users`, methods: 'POST' } ] })
+);
 
 app.use(`${API_ROOT}/reminders`, require('./routes/reminders'));
 app.use(`${API_ROOT}/subscriptions`, require('./routes/subscriptions'));
+app.use(`${API_ROOT}/users`, require('./routes/users'));
+app.use(`${API_ROOT}/groups`, require('./routes/groups'));
 
 app.get('/', (req, res) => {
   res.send('You may want to use the API instead.');
 });
 
-app.use((err, req, res, _next) => {
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+
   switch(err.name) {
     case 'NotFoundError': break;
     default: console.error(err.stack);

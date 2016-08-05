@@ -2,21 +2,25 @@ const spawn = require('child_process').spawn;
 const path = require('path');
 const rimraf = require('rimraf');
 const tcpPortUsed = require('tcp-port-used');
+const mkdirp = require('mkdirp');
+
+const config = require('./config');
 
 const entryPoint = path.join(__dirname, '../app.js');
 
 let handler;
 
-const httpPort = 3001;
-const mqPort = 4001;
-const profilePath = path.join(__dirname, '../profiles/test');
+const httpPort = config.httpPort;
+const mqPort = config.mqPort;
+const profilePath = config.profilePath;
 
 module.exports = {
-  httpPort,
-  mqPort,
-  profilePath,
-  start() {
+  reinitProfile() {
     rimraf.sync(profilePath);
+    mkdirp.sync(profilePath);
+  },
+  start() {
+    this.reinitProfile();
 
     handler = spawn(
       'node',
@@ -40,31 +44,6 @@ module.exports = {
     return new Promise(resolve => {
       handler.on('exit', () => resolve());
       handler.kill();
-    });
-  },
-
-  inject() {
-    const chakram = require('chakram');
-    const config = require('./config');
-
-    const self = this;
-
-    beforeEach(function*() {
-      yield self.start();
-      const res = yield chakram.post(
-        `${config.apiRoot}/login`,
-        { user: 'family_name', password: 'password' }
-      );
-      chakram.setRequestDefaults({
-        headers: {
-          Authorization: `Bearer ${res.body.token}`
-        }
-      });
-    });
-
-    afterEach(function*() {
-      chakram.clearRequestDefaults();
-      yield self.stop();
     });
   },
 };

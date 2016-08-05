@@ -4,6 +4,8 @@ const expect = chakram.expect;
 const serverManager = require('./server_manager');
 const config = require('./config.js');
 
+const api = require('./api_tooling');
+
 describe('/subscriptions', function() {
   const subscriptionsUrl = `${config.apiRoot}/subscriptions`;
 
@@ -47,7 +49,22 @@ describe('/subscriptions', function() {
     { title: updatedSubscription.title }
   );
 
-  serverManager.inject();
+  beforeEach(function*() {
+    yield serverManager.start();
+
+    const user = {
+      forename: 'Jane',
+      password: 'Hello World',
+      email: 'jane@family.com',
+    };
+    user.id = yield* api.createUser(user);
+    yield* api.login(user.email, user.password);
+  });
+
+  afterEach(function*() {
+    api.logout();
+    yield serverManager.stop();
+  });
 
   it('should implement basic CRUD functionality', function*() {
     const expectedLocation = `${subscriptionsUrl}/1`;

@@ -3,6 +3,7 @@ const chakram = require('chakram');
 const expect = chakram.expect;
 
 const serverManager = require('./server_manager');
+const api = require('./api_tooling');
 const config = require('./config.js');
 
 function assertFullRemindersAreEqual(actual, expected,
@@ -19,29 +20,57 @@ function assertFullRemindersAreEqual(actual, expected,
 describe('/reminders', function() {
   const remindersUrl = `${config.apiRoot}/reminders`;
 
+  const users = [
+    {
+      forename: 'John',
+      password: 'Hello World',
+      email: 'john@family.com',
+    },
+    {
+      forename: 'Jane',
+      password: 'Hello World',
+      email: 'jane@family.com',
+    },
+  ];
+
   const initialReminder = {
-    recipients: ['Jane'],
+    recipients: [{ userId: 2 }],
     action: 'Pick up kids at school',
     due: Date.now() + 2 * 60 * 60 * 1000,
   };
 
-  serverManager.inject();
+  beforeEach(function*() {
+    yield serverManager.start();
+    for (const user of users) {
+      user.id = yield* api.createUser(user);
+    }
+    yield* api.login(users[0].email, users[0].password);
+  });
+
+  afterEach(function*() {
+    yield serverManager.stop();
+  });
 
   it('should implement basic CRUD functionality', function*() {
     const expectedLocation = `${remindersUrl}/1`;
-    const expectedReminder = Object.assign(
-      { id: 1, status: 'waiting' },
-      initialReminder
-    );
+    const expectedReminder = {
+      id: 1,
+      action: initialReminder.action,
+      due: initialReminder.due,
+      status: 'waiting',
+    };
+
     const updatedReminder = {
-      recipients: ['John'],
+      recipients: [{ userId: 1 }],
       action: 'Go shopping',
       due: Date.now() + 4 * 60 * 60 * 1000,
     };
-    const expectedUpdatedReminder = Object.assign(
-      {}, expectedReminder, updatedReminder
-    );
-
+    const expectedUpdatedReminder = {
+      id: 1,
+      action: updatedReminder.action,
+      due: updatedReminder.due,
+      status: 'waiting',
+    };
 
     const timestampBeforeCreation = Date.now();
 
@@ -57,6 +86,12 @@ describe('/reminders', function() {
     assertFullRemindersAreEqual(res.body, expectedReminder,
       timestampBeforeCreation, timestampAfterCreation);
 
+    res = yield chakram.get(`${expectedLocation}/recipients`);
+    expect(res).status(200);
+    expect(res.body).deep.equal(
+      [{ id: users[1].id, forename: users[1].forename, email: users[1].email }]
+    );
+
     res = yield chakram.put(expectedLocation, updatedReminder);
     expect(res).status(200);
     assertFullRemindersAreEqual(res.body, expectedUpdatedReminder,
@@ -67,10 +102,17 @@ describe('/reminders', function() {
     assertFullRemindersAreEqual(res.body, expectedUpdatedReminder,
       timestampBeforeCreation, timestampAfterCreation);
 
+    res = yield chakram.get(`${expectedLocation}/recipients`);
+    expect(res).status(200);
+    expect(res.body).deep.equal(
+      [{ id: users[0].id, forename: users[0].forename, email: users[0].email }]
+    );
+
     res = yield chakram.delete(expectedLocation);
     expect(res).status(204);
 
     res = yield chakram.get(remindersUrl);
+    expect(res).status(200);
     expect(res.body).deep.equal([]);
   });
 
@@ -92,6 +134,13 @@ describe('/reminders', function() {
     expect(res.body).deep.equal([]);
 
     yield chakram.post(remindersUrl, initialReminder);
+    res = yield chakram.get(remindersUrl);
+    // John is logged in, but the reminder is for Jane
+    expect(res.body).lengthOf(0);
+
+    // now logging in with Jane
+    yield* api.login(users[1].email, users[1].password);
+
     res = yield chakram.get(remindersUrl);
     expect(res.body).lengthOf(1);
 
@@ -128,12 +177,20 @@ describe('/reminders', function() {
       { due: now + 10 * 60 * 1000 }
     );
 
-    yield Promise.all([
+    yield [
       chakram.post(remindersUrl, firstReminder),
       chakram.post(remindersUrl, secondReminder)
-    ]);
+    ];
 
     let res = yield chakram.get(remindersUrl);
+    expect(res).status(200);
+    // John is logged in, but the reminder is for Jane
+    expect(res.body).lengthOf(0);
+
+    // now logging in with Jane
+    yield* api.login(users[1].email, users[1].password);
+
+    res = yield chakram.get(remindersUrl);
     expect(res).status(200);
     expect(res.body).lengthOf(2);
 
