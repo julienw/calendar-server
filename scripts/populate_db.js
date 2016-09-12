@@ -4,8 +4,8 @@ const request = require('request-promise');
 
 
 const baseUrl = process.env.TARGET_ENV === 'production'
-  ? 'https://calendar.knilxof.org/api/v1'
-  : 'http://localhost:3000/api/v1';
+  ? 'https://calendar.knilxof.org/api/v2'
+  : 'http://localhost:3000/api/v2';
 
 const baseOptions = {
   json: true,

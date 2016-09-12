@@ -77,7 +77,7 @@ describe('/reminders', function() {
     let res = yield chakram.post(remindersUrl, initialReminder);
     const timestampAfterCreation = Date.now();
     expect(res).status(201);
-    expect(res).header('location', '/api/v1/reminders/1');
+    expect(res).header('location', '/api/v2/reminders/1');
     assertFullRemindersAreEqual(res.body, expectedReminder,
       timestampBeforeCreation, timestampAfterCreation);
 

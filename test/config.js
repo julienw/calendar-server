@@ -7,6 +7,6 @@ const profilePath = path.join(__dirname, '../profiles/test');
 module.exports = {
   httpPort,
   mqPort,
-  apiRoot: `http://localhost:${httpPort}/api/v1`,
+  apiRoot: `http://localhost:${httpPort}/api/v2`,
   profilePath,
 };
