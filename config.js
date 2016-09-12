@@ -28,6 +28,7 @@ const config = require('minimist')(
   process.argv.slice(2),
   {
     default: Object.assign({
+      apiRoot: '/api/v1',
       httpPort: 3000,
       mqPort: 4000,
       notificationPoll: 60 * 1000,

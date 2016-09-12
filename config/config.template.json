@@ -17,6 +17,8 @@
      the project root dir. Default to: profiles/development */
   // "profile": "profiles/development",
 
+  /* This is the API endpoint root. Defaults to: '/api/v1' */
+  // "apiRoot": "/api/v1",
 
   /* Secret phrase used to generate an JSON Web Token (used for login). For
     reference, see: https://www.npmjs.com/package/jsonwebtoken. MUST BE CHANGED

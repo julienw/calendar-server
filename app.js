@@ -17,7 +17,7 @@ notificationsSender.start();
 
 const app = express();
 
-const API_ROOT = '/api/v1';
+const API_ROOT = config.apiRoot;
 
 app.use(compression());
 app.use(cors());
