@@ -30,7 +30,7 @@ app.options('*', cors()); // include before other routes
 app.post(`${API_ROOT}/login`, login);
 
 // redirect if we're not logged in
-app.use(jwt({ secret: 'some secret that you should configure' }));
+app.use(jwt({ secret: config.authenticationSecret }));
 
 app.use(`${API_ROOT}/reminders`, require('./routes/reminders'));
 app.use(`${API_ROOT}/subscriptions`, require('./routes/subscriptions'));
