@@ -28,6 +28,7 @@ not exist.`
 module.exports = {
   InvalidInputError: createError(400, 'InvalidInputError'),
   UnauthorizedError: createError(401, 'UnauthorizedError'),
+  ForbiddenError: createError(403, 'ForbiddenError'),
   NotFoundError,
   DuplicateEndpointError: createError(409, 'DuplicateEndpointError'),
   InternalError: createError(500, 'InternalError'),

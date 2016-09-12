@@ -31,21 +31,17 @@ describe('push notification sender', function() {
   it('should emit push notifications on new messages', function*() {
     this.timeout(10000);
 
-    const family = 'family_name';
     const reminderId = 1;
     const message = {
       reminder: {
         id: reminderId,
-        recipients: ['John'],
         action: 'Pick up kids at school',
-        created: 1466588359000,
         due: 1466613000000,
         status: 'pending',
-        family
       },
       subscription: {
         id: 1,
-        family,
+        userId: 1,
         title: 'Firefox 47 on Linux',
         subscription: {
           endpoint: 'https://an.end.point',
@@ -60,7 +56,7 @@ describe('push notification sender', function() {
 
     mq.send(JSON.stringify(message));
 
-    yield waitUntilReminderHasStatus(family, reminderId, 'done');
+    yield waitUntilReminderHasStatus(reminderId, 'done');
 
     sinon.assert.calledWith(webpush.sendNotification,
       subscription.endpoint,

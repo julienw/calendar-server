@@ -4,6 +4,7 @@ const sinon = require('sinon');
 const mq = require('zmq').socket('pull');
 
 const serverManager = require('./server_manager');
+const api = require('./api_tooling');
 const config = require('./config.js');
 const database = require('../dao/database');
 
@@ -37,7 +38,7 @@ describe('notifications', function() {
 
   const expectedSubscription = {
     id: 1,
-    family: 'family_name',
+    userId: 1,
     title: subscription.title,
     subscription: {
       endpoint: subscription.subscription.endpoint,
@@ -48,48 +49,57 @@ describe('notifications', function() {
     },
   };
 
+  const user = {
+    email: 'john@helloworld.com',
+    password: 'Hello World',
+    forename: 'John',
+  };
 
   const inputs = [{
-    recipients: ['Jane'],
+    recipients: [{ userId: 1 }],
     action: 'Pick up kids at school',
     due: Date.now(),
   }, {
-    recipients: ['John'],
+    recipients: [{ userId: 1 }],
     action: 'Buy milk',
     due: Date.now(),
   }, {
-    recipients: ['David'],
+    recipients: [{ userId: 1 }],
     action: 'Go to school',
     due: Date.now(),
   }];
 
   const outputs = inputs.map((input, i) => {
-    const reminder = Object.assign(
-      {
-        id: i + 1,
-        family: 'family_name',
-        // FIXME: The status value shouldn't be sent to the message queue, as it
-        // gives an outdated information
-        status: 'waiting'
-      },
-      input
-    );
+    const reminder = {
+      id: i + 1,
+      action: input.action,
+      due: input.due,
+      // FIXME: The status value shouldn't be sent to the message queue, as it
+      // gives an outdated information
+      status: 'waiting'
+    };
+
     return {
       reminder,
       subscription: expectedSubscription
     };
   });
 
-  const remindersUrl = `${config.apiRoot}/reminders`;
-  const subscriptionsUrl = `${config.apiRoot}/subscriptions`;
+  const mqSocket = `tcp://127.0.0.1:${config.mqPort}`;
 
-  const mqSocket = `tcp://127.0.0.1:${serverManager.mqPort}`;
+  beforeEach(function*() {
+    yield serverManager.start();
+    user.id = yield* api.createUser(user);
+    yield* api.login(user.email, user.password);
+  });
 
-  serverManager.inject();
+  afterEach(function* () {
+    yield serverManager.stop();
+  });
 
   describe('no subscription registered', function() {
     beforeEach(function() {
-      return database.init(serverManager.profilePath);
+      return database.init(config.profilePath);
     });
 
     afterEach(function() {
@@ -100,9 +110,9 @@ describe('notifications', function() {
       const mqMessageSpy = sinon.spy();
       waitForMqMessage().then(mqMessageSpy);
 
-      yield chakram.post(remindersUrl, inputs[0]);
+      const reminderId = yield* api.createReminder(inputs[0]);
       yield waitUntilReminderHasStatus(
-        'family_name', 1, 'error-no-subscription'
+        reminderId, 'error-no-subscription'
       );
       sinon.assert.notCalled(mqMessageSpy);
     });
@@ -111,7 +121,7 @@ describe('notifications', function() {
   describe('once subscriptions are registered', function() {
     beforeEach(function*() {
       mq.connect(mqSocket);
-      yield chakram.post(subscriptionsUrl, subscription);
+      yield* api.createSubscription(subscription);
     });
 
     afterEach(function() {
@@ -126,7 +136,7 @@ describe('notifications', function() {
       // the second interval). Hence, the 3rd reminder is a sentinel to make
       // sure we entered a new interval.
       for (let i = 0; i < inputs.length; i++) {
-        yield chakram.post(remindersUrl, inputs[i]);
+        yield* api.createReminder(inputs[i]);
 
         const message = yield waitForMqMessage();
         expect(message).deep.equal(outputs[i]);

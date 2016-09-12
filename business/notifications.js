@@ -1,4 +1,5 @@
 const debug = require('debug')('calendar-server:business/notifications');
+
 const subscriptionsDao = require('../dao/subscriptions');
 const remindersDao = require('../dao/reminders');
 const config = require('../config');
@@ -9,21 +10,33 @@ const mqUrl = `tcp://127.0.0.1:${config.mqPort}`;
 let intervalId;
 
 function sendReminderAndUpdateDatabase(reminder, subscriptions) {
-  if (subscriptions.length === 0) {
-    const statusName = 'error-no-subscription';
-    debug('Family "%s" has no subscription, marking reminder #%s as "%s"',
-      reminder.family, reminder.id, statusName
-    );
-    return remindersDao.setReminderStatus(reminder.id, statusName);
-  }
+  const errorStatus = 'error-no-subscription';
+  const successPromises = [];
+  const errorPromises = [];
 
-  const promises = subscriptions.map(subscription => {
-    const message = { reminder, subscription };
-    return mq.send(JSON.stringify(message));
+  subscriptions.forEach(subscription => {
+    if (subscription.id === null) {
+      debug('User "%s" has no subscription, marking reminder #%s as "%s"',
+        subscription.userId, reminder.id, errorStatus
+      );
+      errorPromises.push(
+        remindersDao.setReminderStatus(reminder.id, errorStatus)
+      );
+    } else {
+      const message = { reminder, subscription };
+      successPromises.push(
+        mq.send(JSON.stringify(message))
+      );
+    }
   });
 
-  return Promise.all(promises)
-    .then(() => remindersDao.setReminderStatus(reminder.id, 'pending'));
+  return Promise.all(successPromises)
+    .then(() => {
+      if (errorPromises.length) {
+        return Promise.resolve();
+      }
+      return remindersDao.setReminderStatus(reminder.id, 'pending');
+    });
 }
 
 function sendNewNotifications() {
@@ -38,13 +51,14 @@ function sendNewNotifications() {
   remindersDao.findAllDueReminders(now)
     .then(reminders => {
       debug('Found reminders: %o', reminders);
-      const remindersPromises = reminders.map(
-        reminder => subscriptionsDao.findSubscriptionsByFamily(reminder.family)
+
+      const remindersPromises = reminders.map(reminder =>
+        subscriptionsDao.findForReminder(reminder.id)
           .then(subscriptions => {
             debug('Found subscriptions: %o', subscriptions);
             return sendReminderAndUpdateDatabase(reminder, subscriptions);
           })
-        );
+      );
       return Promise.all(remindersPromises);
     }).catch(err => {
       // Bubble up errors, otherwise they are silently dropped

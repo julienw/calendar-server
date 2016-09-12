@@ -5,15 +5,10 @@ const reminders = require('../dao/reminders');
 
 const router = express.Router();
 
-function removeFamilyProperty(item) {
-  delete item.family;
-  return item;
-}
-
 router.get('/', (req, res, next) => {
   const start = parseInt(req.query.start);
   let limit = parseInt(req.query.limit);
-  const family = req.user.family;
+  const userId = req.user.id;
 
   if (Number.isNaN(limit)) {
     limit = 20;
@@ -21,56 +16,63 @@ router.get('/', (req, res, next) => {
 
   let operationPromise;
   if (Number.isNaN(start)) {
-    operationPromise = reminders.indexByStatus(family, 'waiting', limit);
+    operationPromise =
+      reminders.getAllForUserByStatus(userId, 'waiting', limit);
   } else {
-    operationPromise = reminders.indexByStart(family, start, limit);
+    operationPromise = reminders.getAllForUserByStart(userId, start, limit);
   }
 
-  operationPromise.then(rows => {
-    // We don't want to expose the family in the API result
-    res.send(rows.map(removeFamilyProperty));
-  }).catch(next);
+  operationPromise.then(
+    rows => res.send(rows)
+  ).catch(next);
 });
 
 router.post('/', (req, res, next) => {
-  const family = req.user.family;
-  reminders.create(family, req.body).then((id) => {
+  const userId = req.user.id;
+  reminders.create(userId, req.body).then((id) => {
     debug('Reminder #%s has been created in database', id);
 
-    return reminders.show(family, id);
+    return reminders.show(id);
   }).then((reminder) => {
     debug('Reminder #%s is: %o', reminder.id, reminder);
     res
       .status(201)
       .location(`${req.baseUrl}/${reminder.id}`)
-      .send(removeFamilyProperty(reminder));
+      .send(reminder);
   }).catch(next);
 });
 
-router.route('/:id')
+// TODO add permission checks
+router.route('/:id(\\d+)')
   .get((req, res, next) => {
-    reminders.show(req.user.family, req.params.id).then((reminder) => {
+    reminders.show(req.params.id).then((reminder) => {
       debug('Found reminder %o', reminder);
-      res.send(removeFamilyProperty(reminder));
+      res.send(reminder);
     }).catch(next);
   })
   .delete((req, res, next) => {
-    reminders.delete(req.user.family, req.params.id)
+    // TODO do not delete if there is more than 1 recipient
+    reminders.delete(req.user.id, req.params.id)
       .then(() => res.status(204).end())
       .catch(next);
   })
   .put((req, res, next) => {
-    const family = req.user.family;
     const id = req.params.id;
 
-    reminders.update(family, id, req.body).then(() => {
+    reminders.update(id, req.body).then(() => {
       debug('Reminder #%s has been updated in database', id);
 
-      return reminders.show(family, id);
+      return reminders.show(id);
     }).then((reminder) => {
       debug('Reminder #%s has been updated: %o', id, reminder);
-      res.send(removeFamilyProperty(reminder));
+      res.send(reminder);
     }).catch(next);
   });
+
+router.get('/:id(\\d+)/recipients', function(req, res, next) {
+  reminders.getRecipients(req.params.id)
+    .then(recipients => res.send(recipients))
+    .catch(next);
+});
 
 module.exports = router;

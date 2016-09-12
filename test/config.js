@@ -1,5 +1,12 @@
-const port = require('./server_manager').httpPort;
+const path = require('path');
+
+const httpPort = 3001;
+const mqPort = 4001;
+const profilePath = path.join(__dirname, '../profiles/test');
 
 module.exports = {
-  apiRoot: `http://localhost:${port}/api/v1`
+  httpPort,
+  mqPort,
+  apiRoot: `http://localhost:${httpPort}/api/v2`,
+  profilePath,
 };

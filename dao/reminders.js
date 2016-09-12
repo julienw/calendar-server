@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:reminders');
+const debug = require('debug')('calendar-server:dao/reminders');
 
 const database = require('./database');
 const { InvalidInputError, NotFoundError } = require('../utils/errors');
@@ -10,21 +10,13 @@ function notFoundError(id) {
   return NotFoundError.createWithSubject('reminder', { name: 'id', value: id });
 }
 
-function serializeRecipients(recipients) {
-  return JSON.stringify(recipients);
-}
-
-function deserializeRecipients(recipients) {
-  return JSON.parse(recipients);
-}
-
-function deserialize(reminder) {
-  reminder.recipients = deserializeRecipients(reminder.recipients);
-  return reminder;
+function sanitizeUser(user) {
+  delete user.password_hash;
+  return user;
 }
 
 module.exports = {
-  indexByStart(family, start, limit) {
+  getAllForUserByStart(userId, start, limit) {
     if (typeof start !== 'number') {
       throw new InvalidInputError('invalid_type', '"start" should be a number');
     }
@@ -33,120 +25,181 @@ module.exports = {
       throw new InvalidInputError('invalid_type', '"limit" should be a number');
     }
 
-    debug('indexByStart(family=%s, start=%s, limit=%s)', family, start, limit);
+    debug(
+      'getAllForUserByStart(userId=%s,start=%s,limit=%s)', userId, start, limit
+    );
 
-    let statement = 'SELECT * FROM reminders WHERE family = ? AND due >= ?';
-    const statementArgs = [ family, start ];
+    let statement = `
+      SELECT reminder.* FROM reminder, user_reminder
+      WHERE
+        user_reminder.reminder_id = reminder.id AND
+        user_reminder.user_id = ? AND
+        reminder.due >= ?`;
+
+    const statementArgs = [ userId, start ];
+
     if (limit) { // if limit is 0, it means no limit
       statement += ' LIMIT ?';
       statementArgs.push(limit);
     }
-    debug('statement is `%s`', statement);
+
     return database.ready
-      .then(db => db.all(statement, ...statementArgs))
-      .then(reminders => reminders.map(deserialize));
+      .then(db => db.all(statement, ...statementArgs));
   },
 
-  indexByStatus(family, status, limit) {
+  getAllForUserByStatus(userId, status, limit) {
     if (typeof limit !== 'number') {
       throw new InvalidInputError('invalid_type', '"limit" should be a number');
     }
 
-    debug('indexByStatus(family=%s, status=%s)', family, status);
+    debug('getAllForUserByStatus(userId=%s, status=%s)', userId, status);
 
-    let statement = 'SELECT * FROM reminders WHERE family = ? AND status = ?';
-    const statementArgs = [ family, status ];
+    let statement = `
+      SELECT reminder.* FROM reminder, user_reminder
+      WHERE
+        user_reminder.reminder_id = reminder.id AND
+        user_reminder.user_id = ? AND
+        reminder.status = ?`;
+    const statementArgs = [ userId, status ];
+
     if (limit) {
       statement += ' LIMIT ?';
       statementArgs.push(limit);
     }
 
     return database.ready
-      .then(db => db.all(statement, ...statementArgs))
-      .then(reminders => reminders.map(deserialize));
+      .then(db => db.all(statement, ...statementArgs));
   },
 
-  create(family, reminder) {
-    debug('create(family=%s, reminder=%o)', family, reminder);
+  create(userId, reminder) {
+    debug('create(userId=%s, reminder=%o)', userId, reminder);
 
     checkIsArray(reminder, 'recipients', 1);
     checkPropertyType(reminder, 'action', 'string');
     checkPropertyType(reminder, 'due', 'number');
 
     return database.ready
-      .then(db => db.run(
-        `INSERT INTO reminders
-          (recipients, action, created, due, family)
-          VALUES (?, ?, ?, ?, ?)`,
-          serializeRecipients(reminder.recipients),
-          reminder.action,
-          Date.now(),
-          reminder.due,
-          family
-      ))
-      .then(result => result.lastId);
+      .then((db) => {
+        return db.run(
+          `INSERT INTO reminder
+            (action, created, due, status)
+            VALUES (?, ?, ?, ?)`,
+            reminder.action,
+            Date.now(),
+            reminder.due,
+            'waiting'
+        )
+        .then(result => result.lastId)
+        .then((reminderId) => {
+          // TODO check it works fine for concurrent requests
+          const insertPromises = reminder.recipients.map((recipient) => db.run(
+              `INSERT INTO user_reminder (user_id, reminder_id)
+                VALUES (?, ?)`,
+              recipient.userId,
+              reminderId
+            ));
+
+          return Promise.all(insertPromises)
+            .then(() => reminderId);
+        });
+      });
   },
 
-  show(family, id) {
-    debug('show(family=%s, id=%s)', family, id);
+  show(id) {
+    debug('show(id=%s)', id);
 
     return database.ready
       .then(db => db.get(
-        'SELECT * FROM reminders WHERE family = ? AND id = ?',
-        family, id
+        'SELECT * FROM reminder WHERE id = ?', id
       ))
-      .then(reminder => (
-        reminder
-          ? deserialize(reminder)
-          : Promise.reject(notFoundError(id))
-      ));
+      .then((row) => {
+        if (!row) {
+          throw notFoundError(id);
+        }
+
+        return row;
+      });
   },
 
-  delete(family, id) {
-    debug('delete(family=%s, id=%s)', family, id);
+  getRecipients(id) {
+    debug('getRecipients(id=%s)', id);
+
+    return database.ready
+      .then(db => db.all(
+        `SELECT user.* FROM user, user_reminder ur
+         WHERE
+           ur.reminder_id = ? AND
+           ur.user_id = user.id`,
+        id))
+      .then(rows => rows.map(sanitizeUser));
+  },
+
+  delete(id) {
+    debug('delete(userId=%s, id=%s)', id);
     return database.ready
       .then(db => db.delete(
-        'FROM reminders WHERE family = ? AND id = ?',
-        family, id
+        'FROM reminder WHERE id = ?',
+        id
       ));
   },
 
-  update(family, id, updatedReminder) {
-    debug('update(family=%s, id=%s)', family, id);
+  update(id, updatedReminder) {
+    debug('update(id=%s)', id);
 
     checkIsArray(updatedReminder, 'recipients', 1);
     checkPropertyType(updatedReminder, 'action', 'string');
     checkPropertyType(updatedReminder, 'due', 'number');
 
+    // Update reminder before recipients
     return database.ready
-      .then(db => db.update(
-        `reminders SET
-        recipients = ?,
-        action = ?,
-        due = ?
-        WHERE family = ? AND id = ?`,
-        serializeRecipients(updatedReminder.recipients),
-        updatedReminder.action,
-        updatedReminder.due,
-        family, id
-      ));
+      .then((db) =>
+        db.update(
+          `reminder SET
+          action = ?,
+          due = ?
+          WHERE id = ?`,
+          updatedReminder.action,
+          updatedReminder.due,
+          id
+        ).then(() => {
+          const recipients = updatedReminder.recipients;
+
+          // Build a WHERE clause to remove any recipients not mentioned
+          const inClause = '?, '.repeat(recipients.length - 1);
+          const whereClause = `user_reminder.user_id NOT IN (${inClause} ?)`;
+
+          const deleteStatement =
+            `DELETE FROM user_reminder WHERE ${whereClause}`;
+          const deleteArgs = recipients.map(recipient => recipient.userId);
+
+          const insertStatement = 'INSERT OR REPLACE INTO user_reminder ' +
+            '(user_id, reminder_id) VALUES (?, ?)';
+
+          return db.run(deleteStatement, deleteArgs)
+            .then(() =>
+              Promise.all(recipients.map(
+                (recipient) => db.run(insertStatement, recipient.userId, id)
+              ))
+            );
+        })
+      );
   },
 
   findAllDueReminders(now) {
     debug('findAllDueReminders(now=%d)', now);
     return database.ready.then(db =>
       db.all(
-        'SELECT * FROM reminders WHERE due <= ? AND status = "waiting"',
+        'SELECT * FROM reminder WHERE due <= ? AND status = "waiting"',
         now
       )
-    ).then(reminders => reminders.map(deserialize));
+    );
   },
 
   setReminderStatus(id, status) {
     debug('setReminderStatus(id=%d, status=%s)', id, status);
     return database.ready.then(db =>
       db.update(
-        'reminders SET status = ? WHERE id = ?',
+        'reminder SET status = ? WHERE id = ?',
         status, id
       )
     );
@@ -157,7 +210,7 @@ module.exports = {
     debug('setReminderStatusIfNotError(id=%d, status=%s)', id, status);
     return database.ready.then(db =>
       db.update(
-        'reminders SET status = ? WHERE id = ? AND status != "error"',
+        'reminder SET status = ? WHERE id = ? AND status != "error"',
         status, id
       )
     );

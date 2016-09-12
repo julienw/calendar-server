@@ -7,16 +7,16 @@ const { DuplicateEndpointError, NotFoundError } = require('../utils/errors');
 const router = express.Router();
 
 function hidePrivateData(item) {
-  delete item.family;
   delete item.subscription.keys.auth;
+  delete item.userId;
   return item;
 }
 
 router.post('/', function(req, res, next) {
-  const family = req.user.family;
+  const userId = req.user.id;
 
   const endpoint = req.body.subscription.endpoint;
-  subscriptions.findByEndpoint(family, endpoint).then((subscription) => {
+  subscriptions.findByEndpoint(userId, endpoint).then((subscription) => {
     // This endpoint is already in the DB
     throw new DuplicateEndpointError( // will generate a status "409 Conflict"
       'duplicate_endpoint',
@@ -31,10 +31,10 @@ router.post('/', function(req, res, next) {
 
     // This endpoint does not exist yet, let's create it
 
-    return subscriptions.create(family, req.body).then((id) => {
+    return subscriptions.create(userId, req.body).then((id) => {
       debug('Subscription #%s has been created in database', id);
 
-      return subscriptions.show(family, id);
+      return subscriptions.show(userId, id);
     }).then((subscription) => {
       res
         .status(201)
@@ -45,30 +45,30 @@ router.post('/', function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-  subscriptions.index(req.user.family).then((rows) => {
+  subscriptions.findByUserId(req.user.id).then((rows) => {
     res.send(rows.map(hidePrivateData));
   }).catch(next);
 });
 
-router.route('/:id')
+router.route('/:id(\\d+)')
   .get((req, res, next) => {
-    subscriptions.show(req.user.family, req.params.id)
+    subscriptions.show(req.user.id, req.params.id)
       .then((subscription) => {
         debug('Found subscription %o', subscription);
         res.send(hidePrivateData(subscription));
       }).catch(next);
   })
   .delete((req, res, next) => {
-    subscriptions.delete(req.user.family, req.params.id)
+    subscriptions.delete(req.user.id, req.params.id)
     .then(() => res.status(204).end())
     .catch(next);
   })
   .put((req, res, next) => {
-    const family = req.user.family;
+    const userId = req.user.id;
     const id = req.params.id;
 
-    subscriptions.update(family, id, req.body)
-    .then(() => subscriptions.show(family, id))
+    subscriptions.update(userId, id, req.body)
+    .then(() => subscriptions.show(userId, id))
     .then((subscription) => {
       debug('Updated subscription %o', subscription);
       res.send(hidePrivateData(subscription));
