@@ -520,6 +520,31 @@ This will remove the user with id `userId` from this group.
 * 404 if no group with this ID exists or if the logged-in user is not part of
   this group.
 
+### GET `/groups/{id}/reminders`
+Required: the header `Authorization` that identifies a user. Only a user that
+belongs to this group can see its associated reminders.
+
+This returns all reminders that are associated with users that belong to this
+group.
+
+#### Input
+GET parameters:
+* `start`: as a timestamp, this indicates the start point to return reminders
+  from. Default is now.
+* `limit`: as an integer, this indicates how many items should be returned.
+  Default is 20. Specify 0 to return everything to the end.
+
+#### Output
+```json
+[{
+  "id": 1,
+  "recipients": [{ "userId": 1, "forename": "Jane" }],
+  "action": "Pick up kids at school",
+  "created": 1466588359000,
+  "due": 1466613000000
+}]
+```
+
 ### PUT `/groups/{id}`
 
 Required: the header `Authorization` that identifies a user. A group can only be
