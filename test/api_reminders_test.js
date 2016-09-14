@@ -123,6 +123,36 @@ describe('/reminders', function() {
     expect(res.body).deep.equal([]);
   });
 
+  it('works using `myself` as user id', function*() {
+    const reminder = Object.assign({}, initialReminder);
+
+    reminder.recipients = [{ userId: 'myself' }];
+
+    const timestampBeforeCreation = Date.now();
+    const reminderId = yield* api.createReminder(reminder);
+    const timestampAfterCreation = Date.now();
+
+    const expectedReminder = {
+      id: reminderId,
+      action: initialReminder.action,
+      due: initialReminder.due,
+      status: 'waiting',
+    };
+
+    const expectedLocation = `${remindersUrl}/${reminderId}`;
+
+    let res = yield chakram.get(expectedLocation);
+    expect(res).status(200);
+    assertFullRemindersAreEqual(res.body, expectedReminder,
+      timestampBeforeCreation, timestampAfterCreation);
+
+    res = yield chakram.get(`${expectedLocation}/recipients`);
+    expect(res).status(200);
+    expect(res.body).deep.equal(
+      [{ id: users[0].id, forename: users[0].forename, email: users[0].email }]
+    );
+  });
+
   it('404 errors', function*() {
     const location = `${remindersUrl}/99999`;
     let res = yield chakram.get(location);

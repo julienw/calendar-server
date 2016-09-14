@@ -34,14 +34,13 @@ app.use(
     .unless({ path: [ { url: `${API_ROOT}/users`, methods: 'POST' } ] })
 );
 
+// rewrite "myself" with the logged in user id
+app.use(require('./routes/myself'));
+
 app.use(`${API_ROOT}/reminders`, require('./routes/reminders'));
 app.use(`${API_ROOT}/subscriptions`, require('./routes/subscriptions'));
 app.use(`${API_ROOT}/users`, require('./routes/users'));
 app.use(`${API_ROOT}/groups`, require('./routes/groups'));
-
-app.get('/', (req, res) => {
-  res.send('You may want to use the API instead.');
-});
 
 app.use((err, req, res, next) => {
   if (res.headersSent) {

@@ -135,8 +135,8 @@ module.exports = {
       .then(db => db.all(statement, ...statementArgs));
   },
 
-  create(userId, reminder) {
-    debug('create(userId=%s, reminder=%o)', userId, reminder);
+  create(reminder) {
+    debug('create(reminder=%o)', reminder);
 
     checkIsArray(reminder, 'recipients', 1);
     checkPropertyType(reminder, 'action', 'string');

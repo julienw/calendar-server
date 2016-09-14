@@ -45,10 +45,10 @@ describe('dao', () => {
       });
     });
 
-    describe('create(groupId, reminder)', function() {
+    describe('create(reminder)', function() {
       it('should create a new reminder in the database and' +
         ' associate with users', function*() {
-        const result = yield reminders.create(1, {
+        const result = yield reminders.create({
           recipients: [ { userId: 1 }, { userId: 2 }],
           action: 'pick up from school',
           due: 1470839865000
