@@ -1,7 +1,8 @@
 const debug = require('debug')('calendar-server:routes/groups');
 const express = require('express');
 
-const groups = require('../dao/groups');
+const groupsDao = require('../dao/groups');
+const remindersDao = require('../dao/reminders');
 const { NotFoundError, ForbiddenError } = require('../utils/errors');
 
 const router = express.Router();
@@ -18,7 +19,7 @@ function checkLoggedUserInGroup(req, res, next) {
     loggedId, requestedGroup
   );
 
-  groups.isUserInGroup(requestedGroup, loggedId)
+  groupsDao.isUserInGroup(requestedGroup, loggedId)
     .then(inGroup => {
       debug('  -> ', inGroup);
       if (inGroup) {
@@ -39,7 +40,7 @@ function checkLoggedUserAdmin(req, res, next) {
     loggedId, requestedGroup
   );
 
-  groups.isUserAdminInGroup(requestedGroup, loggedId)
+  groupsDao.isUserAdminInGroup(requestedGroup, loggedId)
     .then(isAdmin => {
       debug('  -> ', isAdmin);
       if (isAdmin) {
@@ -57,20 +58,20 @@ function checkGroupExists(req, res, next) {
   const requestedId = req.params.id;
   debug('checkGroupExists(requestedId=%s)', requestedId);
 
-  groups.get(requestedId).then(
+  groupsDao.get(requestedId).then(
     () => next(),
     next
   );
 }
 
 router.post('/', (req, res, next) => {
-  groups.create(req.body)
-    .then((id) => groups.get(id))
+  groupsDao.create(req.body)
+    .then((id) => groupsDao.get(id))
     .then((group) => {
       debug('group #%s is: %o', group.id, group);
 
       // adding user to group as admin
-      return groups.addUserToGroup(group.id, req.user.id, /* isAdmin */ true)
+      return groupsDao.addUserToGroup(group.id, req.user.id, /* isAdmin */ true)
         .then(() => {
           res
             .status(201)
@@ -85,7 +86,7 @@ router.get('/:id(\\d+)',
   checkGroupExists,
   checkLoggedUserInGroup,
   (req, res, next) => {
-    groups.get(+req.params.id)
+    groupsDao.get(+req.params.id)
       .then(group => res.send(group))
       .catch(next);
   }
@@ -99,12 +100,12 @@ router.put('/:id(\\d+)/members/:userId(\\d+)',
     const group = +req.params.id;
     const user = +req.params.userId;
 
-    groups.isUserInGroup(group, user)
+    groupsDao.isUserInGroup(group, user)
       .then(inGroup => {
         if (inGroup) {
           res.status(409).end();
         } else {
-          groups.addUserToGroup(group, user)
+          groupsDao.addUserToGroup(group, user)
             .then(() => res.status(204).end());
         }
       })
@@ -112,5 +113,42 @@ router.put('/:id(\\d+)/members/:userId(\\d+)',
   }
 );
 
+router.get('/:id(\\d+)/reminders',
+  checkGroupExists,
+  checkLoggedUserInGroup,
+  (req, res, next) => {
+    const groupId = +req.params.id;
+    const start = parseInt(req.query.start);
+    let limit = parseInt(req.query.limit);
+
+    if (Number.isNaN(limit)) {
+      limit = 20;
+    }
+
+    let promise;
+    if (Number.isNaN(start)) {
+      promise = remindersDao.getAllForGroupByStatus(groupId, 'waiting', limit);
+    } else {
+      promise = remindersDao.getAllForGroupByStart(groupId, start, limit);
+    }
+    promise
+      .then(reminders => {
+        const promises = reminders.map(reminder =>
+          remindersDao.getRecipients(reminder.id)
+            .then(recipients => {
+              reminder.recipients = recipients.map(
+                recipient => ({
+                  userId: recipient.id,
+                  forename: recipient.forename,
+                })
+              );
+            })
+        );
+        return Promise.all(promises).then(() => reminders);
+      })
+      .then(reminders => res.send(reminders))
+      .catch(next);
+  }
+);
 
 module.exports = router;

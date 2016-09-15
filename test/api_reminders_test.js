@@ -18,6 +18,8 @@ function assertFullRemindersAreEqual(actual, expected,
 }
 
 describe('/reminders', function() {
+  this.timeout(10000); // Functional tests can last longer than the default 2s.
+
   const remindersUrl = `${config.apiRoot}/reminders`;
 
   const users = [
@@ -31,6 +33,11 @@ describe('/reminders', function() {
       password: 'Hello World',
       email: 'jane@family.com',
     },
+    {
+      forename: 'Alice',
+      password: 'White rabbit',
+      email: 'alice@wonderland.me',
+    }
   ];
 
   const initialReminder = {
@@ -153,7 +160,7 @@ describe('/reminders', function() {
     for (let i = 0; i < 20; i++) {
       promises.push(chakram.post(remindersUrl, initialReminder));
     }
-    yield Promise.all(promises);
+    yield promises;
 
     res = yield chakram.get(remindersUrl);
     expect(res.body).lengthOf(20);
@@ -220,6 +227,117 @@ describe('/reminders', function() {
     expect(res.body).lengthOf(22);
 
     res = yield chakram.get(`${remindersUrl}?start=0&limit=0`);
+    expect(res.body).lengthOf(22);
+  });
+
+  it('GET /groups/:id/reminders', function*() {
+    const group = { name: 'CD_Staff' };
+    group.id = yield* api.createGroup(group);
+
+    const timestampBeforeCreation = Date.now();
+    yield* api.createReminder(initialReminder);
+    const timestampAfterCreation = Date.now();
+
+    const expectedReminder = {
+      id: 1,
+      action: initialReminder.action,
+      due: initialReminder.due,
+      status: 'waiting',
+      recipients: [{ userId: 2, forename: 'Jane' }]
+    };
+
+    const url = `${config.apiRoot}/groups/${group.id}/reminders`;
+
+    // The logged in user is 1; the reminder's recipient is 2.
+    // user 1 only is in this group, so we should get no information.
+    let res = yield chakram.get(url);
+    expect(res.body).deep.equal([]);
+
+    yield* api.addUserToGroup(2, group.id);
+
+    // Now user 1 and 2 are both in this group.
+    res = yield chakram.get(url);
+
+    expect(res.body).lengthOf(1);
+    assertFullRemindersAreEqual(
+      res.body[0], expectedReminder,
+      timestampBeforeCreation, timestampAfterCreation
+    );
+
+    // now testing the limit parameter
+    for (let i = 0; i < 20; i++) {
+      yield* api.createReminder(initialReminder);
+    }
+
+    res = yield chakram.get(url);
+    expect(res.body).lengthOf(20);
+
+    res = yield chakram.get(`${url}?limit=25`);
+    expect(res.body).lengthOf(21);
+
+    res = yield chakram.get(`${url}?limit=0`);
+    expect(res.body).lengthOf(21);
+    expect(res.body.every((reminder, i) => reminder.id === i + 1)).true;
+
+    // Let's login as Alice
+    // Alice is not in the group so she should not be able to access it
+    yield* api.login(users[2].email, users[2].password);
+    res = yield chakram.get(url);
+    expect(res).status(404);
+  });
+
+  it('GET /groups/:id/reminders?start', function*() {
+    const now = Date.now();
+    const firstReminder = Object.assign(
+      {}, initialReminder,
+      { due: now }
+    );
+    const secondReminder = Object.assign(
+      {}, initialReminder,
+      { due: now + 10 * 60 * 1000 }
+    );
+
+    yield [
+      chakram.post(remindersUrl, firstReminder),
+      chakram.post(remindersUrl, secondReminder)
+    ];
+
+    const group = { name: 'CD_Staff' };
+    group.id = yield* api.createGroup(group);
+    yield* api.addUserToGroup(2, group.id);
+
+    const url = `${config.apiRoot}/groups/${group.id}/reminders`;
+
+    let res = yield chakram.get(url);
+    expect(res).status(200);
+    expect(res.body).lengthOf(2);
+
+    res = yield chakram.get(`${url}?start=${now}`);
+    expect(res).status(200);
+    expect(res.body).lengthOf(2);
+
+    res = yield chakram.get(`${url}?start=${now + 1}`);
+    expect(res).status(200);
+    expect(res.body).lengthOf(1);
+
+    res = yield chakram.get(`${url}?start=${now + 11 * 60 * 1000}`);
+    expect(res).status(200);
+    expect(res.body).deep.equal([]);
+
+    // now testing the limit parameter
+    const promises = [];
+    for (let i = 0; i < 20; i++) {
+      promises.push(chakram.post(remindersUrl, initialReminder));
+    }
+    yield promises;
+
+    res = yield chakram.get(`${url}?start=0`);
+    expect(res.body).lengthOf(20);
+
+    res = yield chakram.get(`${url}?start=0&limit=25`);
+    expect(res.body).lengthOf(22);
+
+    res = yield chakram.get(`${url}?start=0&limit=0`);
     expect(res.body).lengthOf(22);
   });
 });

@@ -52,7 +52,10 @@ module.exports = {
       throw new InvalidInputError('invalid_type', '"limit" should be a number');
     }
 
-    debug('getAllForUserByStatus(userId=%s, status=%s)', userId, status);
+    debug(
+      'getAllForUserByStatus(userId=%s, status=%s, limit=%s)',
+      userId, status, limit
+    );
 
     let statement = `
       SELECT reminder.* FROM reminder, user_reminder
@@ -61,6 +64,67 @@ module.exports = {
         user_reminder.user_id = ? AND
         reminder.status = ?`;
     const statementArgs = [ userId, status ];
+
+    if (limit) {
+      statement += ' LIMIT ?';
+      statementArgs.push(limit);
+    }
+
+    return database.ready
+      .then(db => db.all(statement, ...statementArgs));
+  },
+
+  getAllForGroupByStart(groupId, start, limit) {
+    if (typeof start !== 'number') {
+      throw new InvalidInputError('invalid_type', '"start" should be a number');
+    }
+
+    if (typeof limit !== 'number') {
+      throw new InvalidInputError('invalid_type', '"limit" should be a number');
+    }
+
+    debug(
+      'getAllForUserByStart(groupId=%s,start=%s,limit=%s)',
+      groupId, start, limit
+    );
+
+    let statement = `
+      SELECT reminder.* FROM reminder, user_reminder, user_group
+      WHERE
+        user_reminder.reminder_id = reminder.id AND
+        user_reminder.user_id = user_group.user_id AND
+        user_group.group_id = ? AND
+        reminder.due >= ?`;
+
+    const statementArgs = [ groupId, start ];
+
+    if (limit) { // if limit is 0, it means no limit
+      statement += ' LIMIT ?';
+      statementArgs.push(limit);
+    }
+
+    return database.ready
+      .then(db => db.all(statement, ...statementArgs));
+  },
+
+  getAllForGroupByStatus(groupId, status, limit) {
+    if (typeof limit !== 'number') {
+      throw new InvalidInputError('invalid_type', '"limit" should be a number');
+    }
+
+    debug(
+      'getAllForGroupByStatus(groupId=%s, status=%s, limit=%s)',
+      groupId, status, limit
+    );
+
+    let statement = `
+      SELECT reminder.* FROM reminder, user_reminder, user_group
+      WHERE
+        user_reminder.reminder_id = reminder.id AND
+        user_reminder.user_id = user_group.user_id AND
+        user_group.group_id = ? AND
+        reminder.status = ?`;
+    const statementArgs = [ groupId, status ];
 
     if (limit) {
       statement += ' LIMIT ?';
