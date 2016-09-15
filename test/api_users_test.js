@@ -43,15 +43,23 @@ describe('/users', function() {
     user.id = yield api.createUser(user);
     yield api.login(user.email, user.password);
 
-    const res = yield chakram.get(
+    let res = yield chakram.get(
       `${config.apiRoot}/users/${user.id}`
     );
 
-    expect(res).status(200);
-    expect(res.body).deep.equal({
+    const expectedUser = {
       id: user.id,
       forename: user.forename,
-    });
+    };
+    expect(res).status(200);
+    expect(res.body).deep.equal(expectedUser);
+
+    // We can also access it using the word `myself`
+    res = yield chakram.get(
+      `${config.apiRoot}/users/myself`
+    );
+    expect(res).status(200);
+    expect(res.body).deep.equal(expectedUser);
   });
 
   it('Other users within the same group can retrieve a user', function*() {
@@ -145,6 +153,23 @@ describe('/users', function() {
 
     res = yield chakram.get(
       `${config.apiRoot}/users/${user1.id}/relations`
+    );
+    expect(res).status(200);
+    expect(res.body).deep.equal(
+      [{ id: 2, forename: 'Johan', email: 'johan@johan.com' }]
+    );
+
+    // user1 is the logged-in user, so trying with "myself" a swell
+    res = yield chakram.get(
+      `${config.apiRoot}/users/myself/groups`
+    );
+    expect(res).status(200);
+    expect(res.body).deep.equal(
+      [{ id: 1, name: 'CD_Staff' }]
+    );
+
+    res = yield chakram.get(
+      `${config.apiRoot}/users/myself/relations`
     );
     expect(res).status(200);
     expect(res.body).deep.equal(

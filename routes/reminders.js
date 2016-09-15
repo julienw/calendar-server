@@ -28,8 +28,13 @@ router.get('/', (req, res, next) => {
 });
 
 router.post('/', (req, res, next) => {
-  const userId = req.user.id;
-  reminders.create(userId, req.body).then((id) => {
+  const newReminder = req.body;
+  newReminder.recipients.forEach(recipient => {
+    if (recipient.userId === 'myself') {
+      recipient.userId = +req.user.id;
+    }
+  });
+  reminders.create(newReminder).then((id) => {
     debug('Reminder #%s has been created in database', id);
 
     return reminders.show(id);
