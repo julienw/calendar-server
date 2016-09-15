@@ -12,6 +12,26 @@ function hidePrivateData(item) {
   return item;
 }
 
+function notFoundError(id) {
+  return NotFoundError.createWithSubject(
+    'subscription', { name: 'id', value: id }
+  );
+}
+
+function checkSubscriptionForUser(req, res, next) {
+  const subscriptionId = +req.params.id;
+  const userId = +req.user.id;
+  subscriptions.isSubscriptionForUser(subscriptionId, userId)
+    .then(isForUser => {
+      if (isForUser) {
+        next();
+        return;
+      }
+      debug('Subscription %s is not for user %s', subscriptionId, userId);
+      next(notFoundError(subscriptionId));
+    });
+}
+
 router.post('/', function(req, res, next) {
   const userId = req.user.id;
 
@@ -58,21 +78,27 @@ router.route('/:id(\\d+)')
         res.send(hidePrivateData(subscription));
       }).catch(next);
   })
-  .delete((req, res, next) => {
-    subscriptions.delete(req.user.id, req.params.id)
-    .then(() => res.status(204).end())
-    .catch(next);
-  })
-  .put((req, res, next) => {
-    const userId = req.user.id;
-    const id = req.params.id;
+  .delete(
+    checkSubscriptionForUser,
+    (req, res, next) => {
+      subscriptions.delete(req.params.id)
+        .then(() => res.status(204).end())
+        .catch(next);
+    }
+  )
+  .put(
+    checkSubscriptionForUser,
+    (req, res, next) => {
+      const id = req.params.id;
 
-    subscriptions.update(userId, id, req.body)
-    .then(() => subscriptions.show(userId, id))
-    .then((subscription) => {
-      debug('Updated subscription %o', subscription);
-      res.send(hidePrivateData(subscription));
-    }).catch(next);
-  });
+      subscriptions.update(id, req.body)
+        .then(() => subscriptions.show(req.user.id, id))
+        .then((subscription) => {
+          debug('Updated subscription %o', subscription);
+          res.send(hidePrivateData(subscription));
+        })
+        .catch(next);
+    }
+  );
 
 module.exports = router;

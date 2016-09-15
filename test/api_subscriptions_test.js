@@ -49,15 +49,23 @@ describe('/subscriptions', function() {
     { title: updatedSubscription.title }
   );
 
+  const user = {
+    forename: 'Jane',
+    password: 'Hello World',
+    email: 'jane@family.com',
+  };
+
+  const otherUser = {
+    forename: 'Alice',
+    password: 'Cheshire cat is wonderful',
+    email: 'alice@wonderland.me',
+  };
+
   beforeEach(function*() {
     yield serverManager.start();
 
-    const user = {
-      forename: 'Jane',
-      password: 'Hello World',
-      email: 'jane@family.com',
-    };
     user.id = yield* api.createUser(user);
+    otherUser.id = yield* api.createUser(otherUser);
     yield* api.login(user.email, user.password);
   });
 
@@ -102,6 +110,28 @@ describe('/subscriptions', function() {
 
     res = yield chakram.get(subscriptionsUrl);
     expect(res.body).deep.equal([]);
+  });
+
+  it('should prevent some operations from other users', function*() {
+    const expectedLocation = `${subscriptionsUrl}/1`;
+
+    let res = yield chakram.post(subscriptionsUrl, initialSubscription);
+    expect(res).status(201);
+
+    yield* api.login(otherUser.email, otherUser.password);
+
+    res = yield chakram.get(subscriptionsUrl);
+    expect(res).status(200);
+    expect(res.body).deep.equal([]);
+
+    res = yield chakram.get(expectedLocation);
+    expect(res).status(404);
+
+    res = yield chakram.delete(expectedLocation);
+    expect(res).status(404);
+
+    res = yield chakram.put(expectedLocation, initialSubscription);
+    expect(res).status(404);
   });
 
   it('404 errors', function*() {

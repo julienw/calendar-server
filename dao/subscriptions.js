@@ -33,11 +33,28 @@ function unflatten(item) {
 
 module.exports = {
   findByUserId(userId) {
-    debug('index(userId=%s)', userId);
+    debug('findByUserId(userId=%s)', userId);
     return database.ready
       .then(
         db => db.all('SELECT * FROM subscription WHERE user_id = ?', userId)
       ).then(items => items.map(unflatten));
+  },
+
+  isSubscriptionForUser(id, userId) {
+    debug('isSubscriptionForUser(userId=%s)', userId);
+
+    return database.ready
+      .then(
+        db => db.get(`
+          SELECT COUNT(*) count FROM subscription
+          WHERE id = ? AND user_id = ?`,
+          id, userId
+        )
+      )
+      .then(
+        row => row.count > 0
+      )
+      .then(result => { debug('result', result); return result; });
   },
 
   create(userId, subscription) {
@@ -100,24 +117,24 @@ module.exports = {
       .then(rows => rows.map(unflatten));
   },
 
-  delete(userId, id) {
-    debug('delete(userId=%s, id=%s)', userId, id);
+  delete(id) {
+    debug('delete(id=%s)', id);
     return database.ready
       .then(db => db.delete(
-        'FROM subscription WHERE user_id = ? AND id = ?',
-        userId, id
+        'FROM subscription WHERE id = ?',
+        id
       ));
   },
 
-  update(userId, id, updatedSubscription) {
-    debug('update(userId=%s, id=%s)', userId, id);
+  update(id, updatedSubscription) {
+    debug('update(id=%s)', id);
     return database.ready
       .then(db => db.update(
         `subscription SET
         title = ?
-        WHERE user_id = ? AND id = ?`,
+        WHERE id = ?`,
         updatedSubscription.title,
-        userId, id
+        id
       ));
   },
 
