@@ -109,12 +109,12 @@ describe('notifications', function() {
   beforeEach(function*() {
     yield serverManager.start();
     for (const user of users) {
-      user.id = yield* api.createUser(user);
+      user.id = yield api.createUser(user);
     }
-    yield* api.login(users[0].email, users[0].password);
-    const groupId = yield* api.createGroup({ name: 'CD_Staff' });
-    yield* api.addUserToGroup(2, groupId);
-    yield* api.addUserToGroup(3, groupId);
+    yield api.login(users[0].email, users[0].password);
+    const groupId = yield api.createGroup({ name: 'CD_Staff' });
+    yield api.addUserToGroup(2, groupId);
+    yield api.addUserToGroup(3, groupId);
   });
 
   afterEach(function* () {
@@ -134,7 +134,7 @@ describe('notifications', function() {
       const mqMessageSpy = sinon.spy();
       waitForMqMessage().then(mqMessageSpy);
 
-      const reminderId = yield* api.createReminder(inputs[0]);
+      const reminderId = yield api.createReminder(inputs[0]);
       yield waitUntilReminderHasStatus(
         reminderId, 'error-no-subscription'
       );
@@ -146,8 +146,8 @@ describe('notifications', function() {
     beforeEach(function*() {
       mq.connect(mqSocket);
       for (let i = 0; i < users.length; i++) {
-        yield* api.login(users[i].email, users[i].password);
-        yield* api.createSubscription(subscriptions[i]);
+        yield api.login(users[i].email, users[i].password);
+        yield api.createSubscription(subscriptions[i]);
       }
     });
 
@@ -164,7 +164,7 @@ describe('notifications', function() {
       // the second interval). Hence, the 3rd reminder is a sentinel to make
       // sure we entered a new interval.
       for (let i = 0; i < inputs.length; i++) {
-        yield* api.createReminder(inputs[i]);
+        yield api.createReminder(inputs[i]);
 
         const message = yield waitForMqMessage();
         expect(message).deep.equal(outputs[i]);
