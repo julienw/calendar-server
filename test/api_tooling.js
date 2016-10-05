@@ -1,65 +1,77 @@
 const chakram = require('chakram');
+const co = require('co');
 const config = require('./config');
 const expect = chakram.expect;
 
-function* login(email, password) {
-  const res = yield chakram.post(
-    `${config.apiRoot}/login`,
-    { email, password }
-  );
+function login(email, password) {
+  return co(function*() {
+    const res = yield chakram.post(
+      `${config.apiRoot}/login`,
+      { email, password }
+    );
 
-  expect(res).status(200);
+    expect(res).status(200);
 
-  chakram.setRequestDefaults({
-    headers: {
-      Authorization: `Bearer ${res.body.token}`
-    }
+    chakram.setRequestDefaults({
+      headers: {
+        Authorization: `Bearer ${res.body.token}`
+      }
+    });
+
+    return res.body.token;
   });
-
-  return res.body.token;
 }
 
 function logout() {
   chakram.clearRequestDefaults();
+  return Promise.resolve();
 }
 
-function* createUser(user) {
-  const res = yield chakram.post(
-    `${config.apiRoot}/users`, user
-  );
+function createUser(user) {
+  return co(function*() {
+    const res = yield chakram.post(
+      `${config.apiRoot}/users`, user
+    );
 
-  expect(res).status(201);
+    expect(res).status(201);
 
-  return res.body.id;
+    return res.body.id;
+  });
 }
 
-function* createGroup(group) {
-  const res = yield chakram.post(
-    `${config.apiRoot}/groups`, group
-  );
+function createGroup(group) {
+  return co(function*() {
+    const res = yield chakram.post(
+      `${config.apiRoot}/groups`, group
+    );
 
-  expect(res).status(201);
+    expect(res).status(201);
 
-  return res.body.id;
+    return res.body.id;
+  });
 }
 
-function* addUserToGroup(userId, groupId) {
-  const res = yield chakram.put(
-    `${config.apiRoot}/groups/${groupId}/members/${userId}`
-  );
+function addUserToGroup(userId, groupId) {
+  return co(function*() {
+    const res = yield chakram.put(
+      `${config.apiRoot}/groups/${groupId}/members/${userId}`
+    );
 
-  expect(res).status(204);
+    expect(res).status(204);
+  });
 }
 
-function* createReminder(reminder) {
-  const res = yield chakram.post(`${config.apiRoot}/reminders`, reminder);
-  expect(res).status(201);
+function createReminder(reminder) {
+  return co(function*() {
+    const res = yield chakram.post(`${config.apiRoot}/reminders`, reminder);
+    expect(res).status(201);
 
-  return res.body.id;
+    return res.body.id;
+  });
 }
 
-function* createSubscription(subscription) {
-  yield chakram.post(`${config.apiRoot}/subscriptions`, subscription);
+function createSubscription(subscription) {
+  return chakram.post(`${config.apiRoot}/subscriptions`, subscription);
 }
 
 module.exports = {

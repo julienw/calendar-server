@@ -14,7 +14,7 @@ describe('/login', function() {
 
   beforeEach(function* () {
     yield serverManager.start();
-    yield* api.createUser(user);
+    yield api.createUser(user);
 
   });
 

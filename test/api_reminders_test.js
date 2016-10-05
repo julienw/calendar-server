@@ -49,9 +49,9 @@ describe('/reminders', function() {
   beforeEach(function*() {
     yield serverManager.start();
     for (const user of users) {
-      user.id = yield* api.createUser(user);
+      user.id = yield api.createUser(user);
     }
-    yield* api.login(users[0].email, users[0].password);
+    yield api.login(users[0].email, users[0].password);
   });
 
   afterEach(function*() {
@@ -129,7 +129,7 @@ describe('/reminders', function() {
     reminder.recipients = [{ userId: 'myself' }];
 
     const timestampBeforeCreation = Date.now();
-    const reminderId = yield* api.createReminder(reminder);
+    const reminderId = yield api.createReminder(reminder);
     const timestampAfterCreation = Date.now();
 
     const expectedReminder = {
@@ -176,7 +176,7 @@ describe('/reminders', function() {
     expect(res.body).lengthOf(0);
 
     // now logging in with Jane
-    yield* api.login(users[1].email, users[1].password);
+    yield api.login(users[1].email, users[1].password);
 
     res = yield chakram.get(remindersUrl);
     expect(res.body).lengthOf(1);
@@ -225,7 +225,7 @@ describe('/reminders', function() {
     expect(res.body).lengthOf(0);
 
     // now logging in with Jane
-    yield* api.login(users[1].email, users[1].password);
+    yield api.login(users[1].email, users[1].password);
 
     res = yield chakram.get(remindersUrl);
     expect(res).status(200);
@@ -262,10 +262,10 @@ describe('/reminders', function() {
 
   it('GET /groups/:id/reminders', function*() {
     const group = { name: 'CD_Staff' };
-    group.id = yield* api.createGroup(group);
+    group.id = yield api.createGroup(group);
 
     const timestampBeforeCreation = Date.now();
-    yield* api.createReminder(initialReminder);
+    yield api.createReminder(initialReminder);
     const timestampAfterCreation = Date.now();
 
     const expectedReminder = {
@@ -283,7 +283,7 @@ describe('/reminders', function() {
     let res = yield chakram.get(url);
     expect(res.body).deep.equal([]);
 
-    yield* api.addUserToGroup(2, group.id);
+    yield api.addUserToGroup(2, group.id);
 
     // Now user 1 and 2 are both in this group.
     res = yield chakram.get(url);
@@ -296,7 +296,7 @@ describe('/reminders', function() {
 
     // now testing the limit parameter
     for (let i = 0; i < 20; i++) {
-      yield* api.createReminder(initialReminder);
+      yield api.createReminder(initialReminder);
     }
 
     res = yield chakram.get(url);
@@ -311,7 +311,7 @@ describe('/reminders', function() {
 
     // Let's login as Alice
     // Alice is not in the group so she should not be able to access it
-    yield* api.login(users[2].email, users[2].password);
+    yield api.login(users[2].email, users[2].password);
     res = yield chakram.get(url);
     expect(res).status(404);
   });
@@ -333,8 +333,8 @@ describe('/reminders', function() {
     ];
 
     const group = { name: 'CD_Staff' };
-    group.id = yield* api.createGroup(group);
-    yield* api.addUserToGroup(2, group.id);
+    group.id = yield api.createGroup(group);
+    yield api.addUserToGroup(2, group.id);
 
     const url = `${config.apiRoot}/groups/${group.id}/reminders`;
 

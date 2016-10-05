@@ -17,8 +17,8 @@ describe('/groups', function() {
       forename: 'Julien',
     };
 
-    user.id = yield* api.createUser(user);
-    yield* api.login(user.email, user.password);
+    user.id = yield api.createUser(user);
+    yield api.login(user.email, user.password);
   });
 
   afterEach(function* () {
@@ -42,7 +42,7 @@ describe('/groups', function() {
     const group = { name: 'CD_Staff' };
 
     beforeEach(function*() {
-      group.id = yield* api.createGroup(group);
+      group.id = yield api.createGroup(group);
     });
 
     it('can retrieve a group', function*() {
@@ -63,8 +63,8 @@ describe('/groups', function() {
         forename: 'Johan',
       };
 
-      user2.id = yield* api.createUser(user2);
-      yield* api.login(user2.email, user2.password);
+      user2.id = yield api.createUser(user2);
+      yield api.login(user2.email, user2.password);
 
       const res = yield chakram.get(
         `${config.apiRoot}/groups/${group.id}`

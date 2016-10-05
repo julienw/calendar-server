@@ -57,8 +57,8 @@ describe('/subscriptions', function() {
       password: 'Hello World',
       email: 'jane@family.com',
     };
-    user.id = yield* api.createUser(user);
-    yield* api.login(user.email, user.password);
+    user.id = yield api.createUser(user);
+    yield api.login(user.email, user.password);
   });
 
   afterEach(function*() {
