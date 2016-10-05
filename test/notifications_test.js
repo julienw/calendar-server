@@ -109,12 +109,13 @@ describe('notifications', function() {
   beforeEach(function*() {
     yield serverManager.start();
     for (const user of users) {
+      // TODO parallelize this
       user.id = yield api.createUser(user);
     }
     yield api.login(users[0].email, users[0].password);
     const groupId = yield api.createGroup({ name: 'CD_Staff' });
-    yield api.addUserToGroup(2, groupId);
-    yield api.addUserToGroup(3, groupId);
+    yield api.addUserToGroup(users[1].id, groupId);
+    yield api.addUserToGroup(users[2].id, groupId);
   });
 
   afterEach(function* () {
@@ -145,6 +146,8 @@ describe('notifications', function() {
   describe('once subscriptions are registered', function() {
     beforeEach(function*() {
       mq.connect(mqSocket);
+
+      // It's necessary to run this sequentially
       for (let i = 0; i < users.length; i++) {
         yield api.login(users[i].email, users[i].password);
         yield api.createSubscription(subscriptions[i]);

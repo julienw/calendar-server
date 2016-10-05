@@ -40,25 +40,29 @@ describe('/reminders', function() {
     }
   ];
 
-  const initialReminder = {
-    recipients: [{ userId: 2 }],
-    action: 'Pick up kids at school',
-    due: Date.now() + 2 * 60 * 60 * 1000,
-  };
+  let initialReminder;
 
   beforeEach(function*() {
     yield serverManager.start();
-    for (const user of users) {
-      user.id = yield api.createUser(user);
-    }
+    yield users.map(user =>
+      api.createUser(user)
+        .then(id => (user.id = id))
+    );
     yield api.login(users[0].email, users[0].password);
+
+
+    initialReminder = {
+      recipients: [{ userId: users[1].id }],
+      action: 'Pick up kids at school',
+      due: Date.now() + 2 * 60 * 60 * 1000,
+    };
   });
 
   afterEach(function*() {
     yield serverManager.stop();
   });
 
-  it('should implement basic CRUD functionality', function*() {
+  it.only('should implement basic CRUD functionality', function*() {
     const expectedLocation = `${remindersUrl}/1`;
     const expectedReminder = {
       id: 1,
@@ -68,7 +72,7 @@ describe('/reminders', function() {
     };
 
     const updatedReminder = {
-      recipients: [{ userId: 1 }],
+      recipients: [{ userId: users[0].id }],
       action: 'Go shopping',
       due: Date.now() + 4 * 60 * 60 * 1000,
     };
@@ -248,7 +252,7 @@ describe('/reminders', function() {
     for (let i = 0; i < 20; i++) {
       promises.push(chakram.post(remindersUrl, initialReminder));
     }
-    yield Promise.all(promises);
+    yield promises;
 
     res = yield chakram.get(`${remindersUrl}?start=0`);
     expect(res.body).lengthOf(20);
@@ -273,7 +277,7 @@ describe('/reminders', function() {
       action: initialReminder.action,
       due: initialReminder.due,
       status: 'waiting',
-      recipients: [{ userId: 2, forename: 'Jane' }]
+      recipients: [{ userId: users[1].id, forename: users[1].forename }]
     };
 
     const url = `${config.apiRoot}/groups/${group.id}/reminders`;
@@ -283,7 +287,7 @@ describe('/reminders', function() {
     let res = yield chakram.get(url);
     expect(res.body).deep.equal([]);
 
-    yield api.addUserToGroup(2, group.id);
+    yield api.addUserToGroup(users[1].id, group.id);
 
     // Now user 1 and 2 are both in this group.
     res = yield chakram.get(url);
@@ -295,9 +299,11 @@ describe('/reminders', function() {
     );
 
     // now testing the limit parameter
+    const promises = [];
     for (let i = 0; i < 20; i++) {
-      yield api.createReminder(initialReminder);
+      promises.push(api.createReminder(initialReminder));
     }
+    yield promises;
 
     res = yield chakram.get(url);
     expect(res.body).lengthOf(20);
