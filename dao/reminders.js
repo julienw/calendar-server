@@ -249,6 +249,21 @@ module.exports = {
       );
   },
 
+  deleteRecipient(id, userId) {
+    debug('deleteRecipient(id=%s, userId=%s)');
+    return database.ready
+      .then((db) =>
+        db.delete(
+          `FROM user_reminder
+           WHERE
+             user_reminder.reminder_id = ? AND
+             user_reminder.user_id = ?
+          `,
+          id, userId
+        )
+      );
+  },
+
   findAllDueReminders(now) {
     debug('findAllDueReminders(now=%d)', now);
     return database.ready.then(db =>

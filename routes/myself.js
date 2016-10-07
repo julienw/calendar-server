@@ -6,7 +6,7 @@ const myselfRe = /\bmyself\b/g;
 router.use((req, res, next) => {
   if (req.user && myselfRe.test(req.url)) {
     debug(`Replacing 'myself' with ${req.user.id}`);
-    req.url = req.url.replace(myselfRe, `/${req.user.id}`);
+    req.url = req.url.replace(myselfRe, req.user.id);
   }
   next();
 });
