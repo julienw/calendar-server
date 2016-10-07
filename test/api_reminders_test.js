@@ -370,4 +370,48 @@ describe('/reminders', function() {
     res = yield chakram.get(`${url}?start=0&limit=0`);
     expect(res.body).lengthOf(22);
   });
+
+  it('DELETE /reminders/:id/recipients/myself', function*() {
+    const reminder = {
+      recipients: [{ userId: 2 }, { userId: 3 }],
+      action: 'Pick up kids at school',
+      due: Date.now() + 2 * 60 * 60 * 1000,
+    };
+
+    const reminderId = yield api.createReminder(reminder);
+    const reminderLocation = `${remindersUrl}/${reminderId}`;
+
+    let res = yield chakram.get(`${reminderLocation}/recipients`);
+    expect(res).status(200);
+    expect(res.body).include(
+      { id: users[1].id, forename: users[1].forename, email: users[1].email }
+    );
+    expect(res.body).include(
+      { id: users[2].id, forename: users[2].forename, email: users[2].email }
+    );
+
+    // we're logged in as user 1 (which is users[0])
+    // we shouldn't be able to delete a recipient
+    res = yield chakram.delete(`${reminderLocation}/recipients/myself`);
+    expect(res).status(404);
+    res = yield chakram.delete(`${reminderLocation}/recipients/2`);
+    expect(res).status(403);
+
+    // let's log in as user 2 then
+    yield api.login(users[1].email, users[1].password);
+    res = yield chakram.delete(`${reminderLocation}/recipients/myself`);
+    expect(res).status(204);
+
+    res = yield chakram.get(`${reminderLocation}`);
+    expect(res).status(200);
+
+    // Now check that removing all recipients deletes the reminder itself
+    yield api.login(users[2].email, users[2].password);
+    res = yield chakram.get(`${reminderLocation}`);
+    expect(res).status(200);
+    res = yield chakram.delete(`${reminderLocation}/recipients/myself`);
+    expect(res).status(204);
+    res = yield chakram.get(`${reminderLocation}`);
+    expect(res).status(404);
+  });
 });

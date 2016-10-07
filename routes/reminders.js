@@ -2,6 +2,7 @@ const debug = require('debug')('calendar-server:routes/reminders');
 const express = require('express');
 
 const reminders = require('../dao/reminders');
+const { ForbiddenError } = require('../utils/errors');
 
 const router = express.Router();
 
@@ -79,5 +80,28 @@ router.get('/:id(\\d+)/recipients', function(req, res, next) {
     .then(recipients => res.send(recipients))
     .catch(next);
 });
+
+// TODO check reminder is accessible by the logged in user
+router.delete('/:id(\\d+)/recipients/:userId(\\d+)',
+  (req, res, next) => {
+    const userId = +req.params.userId;
+    if (userId !== req.user.id) {
+      next(new ForbiddenError(
+        'not_myself',
+        'A recipient can only be deleted by oneself.'
+      ));
+      return;
+    }
+    const reminderId = +req.params.id;
+
+    reminders.deleteRecipient(reminderId, userId)
+      .then(() => reminders.getRecipients(reminderId))
+      .then((recipients) =>
+        (recipients.length ? Promise.resolve() : reminders.delete(reminderId))
+      )
+      .then(() => res.status(204).end())
+      .catch(next);
+  }
+);
 
 module.exports = router;
