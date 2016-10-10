@@ -114,6 +114,7 @@ All properties must be present. There is no default value. For instance (JSON):
 }
 ```
 * 400 if some properties are missing or invalid.
+* 403 if some recipient doesn't have any common group with the logged in user.
 
 ### GET `/reminders/{id}`
 
@@ -133,7 +134,8 @@ This gets the data about a specific reminder.
   "due": 1466613000000
 }
 ```
-* 404 if no reminder with this ID exists.
+* 404 if no reminder with this ID exists or if the logged in user has no common
+  groups with at least 1 recipient.
 
 ### GET `/reminders/{id}/recipients`
 
@@ -154,7 +156,8 @@ This returns the list of recipients for this reminder.
   ...
 ]
 ```
-* 404 if no reminder with this ID exists.
+* 404 if no reminder with this ID exists or if the logged in user has no common
+  groups with at least 1 recipient.
 
 ### PUT `/reminders/{id}`
 
@@ -176,7 +179,9 @@ All properties must be present. For example, if we would like to change **only**
 
 * 204 if request succeeded.
 * 400 if some properties are missing or invalid.
-* 404 if no reminder with this ID exists.
+* 403 if some recipient doesn't have any common group with the logged in user.
+* 404 if no reminder with this ID exists or if the logged in user has no common
+  groups with at least 1 recipient.
 
 ### DELETE `/reminders/{id}`
 
@@ -184,15 +189,16 @@ Required: the header `Authorization` that identifies the user.
 
 This allows to delete a specific reminder.
 
-Note we can't delete a reminder if there are still recipients for this reminder.
-Most of the time we want to use [`DELETE
+Only an admin can delete a reminder. Other users should use [`DELETE
 /reminders/{id}/recipients/{userId}`](#XXX) instead.
 
 #### Output
 
 * 204 if request succeeded.
-* 403 if the reminder still has recipients.
-* 404 if no reminder with this ID exists.
+* 403 if the logged in user isn't an admin for one of the groups the recipients
+  are member of.
+* 404 if no reminder with this ID exists or the logged in user has no common
+  groups with any recipient.
 
 ### DELETE `/reminders/{id}/recipients/myself`
 
@@ -205,6 +211,8 @@ If the reminder doesn't have any recipient anymore, it's deleted.
 #### Output
 
 * 204 if request succeeded.
+* 403 if the user tries to remove another recipient than herself from the
+  reminder.
 * 404 if no reminder with this ID exists or if the logged-in user isn't a
   recipient for this reminder.
 

@@ -91,7 +91,8 @@ module.exports = {
         ug1.group_id = ug2.group_id
         `,
         user1, user2
-      ));
+      ))
+      .then(rows => rows.map(row => row.group_id));
   },
   isUserInGroup(groupId, userId) {
     debug('isUserInGroup(groupId=%s, userId=%s)', groupId, userId);

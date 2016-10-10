@@ -40,6 +40,8 @@ describe('/reminders', function() {
     }
   ];
 
+  const group = { name: 'Staff' };
+
   const initialReminder = {
     recipients: [{ userId: 2 }],
     action: 'Pick up kids at school',
@@ -52,6 +54,10 @@ describe('/reminders', function() {
       user.id = yield api.createUser(user);
     }
     yield api.login(users[0].email, users[0].password);
+    group.id = yield api.createGroup(group);
+    yield api.addUserToGroup(users[1].id, group.id);
+    // users[0] and users[1] are in the same group, users[0] is an admin for
+    // this group. users[2] is not in the group.
   });
 
   afterEach(function*() {
@@ -261,9 +267,6 @@ describe('/reminders', function() {
   });
 
   it('GET /groups/:id/reminders', function*() {
-    const group = { name: 'CD_Staff' };
-    group.id = yield api.createGroup(group);
-
     const timestampBeforeCreation = Date.now();
     yield api.createReminder(initialReminder);
     const timestampAfterCreation = Date.now();
@@ -278,15 +281,20 @@ describe('/reminders', function() {
 
     const url = `${config.apiRoot}/groups/${group.id}/reminders`;
 
+    // NOTE TODO: to test this with the current code we need to have an API to
+    // remove somebody from a group -- which we don't have yet. So we can't be
+    // in this situation with the current checks in place.
+    /*
     // The logged in user is 1; the reminder's recipient is 2.
     // user 1 only is in this group, so we should get no information.
     let res = yield chakram.get(url);
     expect(res.body).deep.equal([]);
 
     yield api.addUserToGroup(2, group.id);
+    */
 
     // Now user 1 and 2 are both in this group.
-    res = yield chakram.get(url);
+    let res = yield chakram.get(url);
 
     expect(res.body).lengthOf(1);
     assertFullRemindersAreEqual(
@@ -332,10 +340,6 @@ describe('/reminders', function() {
       chakram.post(remindersUrl, secondReminder)
     ];
 
-    const group = { name: 'CD_Staff' };
-    group.id = yield api.createGroup(group);
-    yield api.addUserToGroup(2, group.id);
-
     const url = `${config.apiRoot}/groups/${group.id}/reminders`;
 
     let res = yield chakram.get(url);
@@ -372,6 +376,8 @@ describe('/reminders', function() {
   });
 
   it('DELETE /reminders/:id/recipients/myself', function*() {
+    yield api.addUserToGroup(users[2].id, group.id);
+
     const reminder = {
       recipients: [{ userId: 2 }, { userId: 3 }],
       action: 'Pick up kids at school',
@@ -413,5 +419,46 @@ describe('/reminders', function() {
     expect(res).status(204);
     res = yield chakram.get(`${reminderLocation}`);
     expect(res).status(404);
+  });
+
+  it('Permission checks', function*() {
+    const forbiddenReminder = Object.assign(
+      {},
+      initialReminder,
+      { recipients: [{ userId: 3 }] }
+    );
+
+    const modifiedReminder = Object.assign(
+      {},
+      initialReminder,
+      { recipients: [{ userId: 1 }] }
+    );
+
+    let res = yield chakram.post(remindersUrl, forbiddenReminder);
+    expect(res).status(403);
+
+    const reminderId = yield api.createReminder(initialReminder);
+    const reminderUrl = `${remindersUrl}/${reminderId}`;
+
+    res = yield chakram.put(reminderUrl, forbiddenReminder);
+    expect(res).status(403);
+
+    yield api.login(users[2].email, users[2].password);
+
+    res = yield chakram.get(reminderUrl);
+    expect(res).status(404);
+
+    res = yield chakram.get(`${reminderUrl}/recipients`);
+    expect(res).status(404);
+
+    res = yield chakram.put(reminderUrl, modifiedReminder);
+    expect(res).status(404);
+
+    res = yield chakram.delete(reminderUrl);
+    expect(res).status(404);
+
+    yield api.login(users[1].email, users[1].password);
+    res = yield chakram.delete(reminderUrl);
+    expect(res).status(403);
   });
 });
