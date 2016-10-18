@@ -18,7 +18,7 @@ describe('/users', function() {
 
   it('can create user', function*() {
     const user = {
-      email: 'Julien@julien.com',
+      username: 'Julien@julien.com',
       password: 'Hello World',
       forename: 'Julien',
     };
@@ -30,18 +30,37 @@ describe('/users', function() {
     expect(res.body).deep.equal({
       id: 1,
       forename: user.forename,
+      username: user.username,
     });
+  });
+
+  it('cannot create 2 users with the same username', function*() {
+    const user = {
+      username: 'Julien@julien.com',
+      password: 'Hello World',
+      forename: 'Julien',
+    };
+
+    let res = yield chakram.post(
+      `${config.apiRoot}/users`, user
+    );
+    expect(res).status(201);
+
+    res = yield chakram.post(
+      `${config.apiRoot}/users`, user
+    );
+    expect(res).status(409);
   });
 
   it('can retrieve a user', function*() {
     const user = {
-      email: 'Julien@julien.com',
+      username: 'Julien@julien.com',
       password: 'Hello World',
       forename: 'Julien',
     };
 
     user.id = yield api.createUser(user);
-    yield api.login(user.email, user.password);
+    yield api.login(user.username, user.password);
 
     let res = yield chakram.get(
       `${config.apiRoot}/users/${user.id}`
@@ -50,6 +69,7 @@ describe('/users', function() {
     const expectedUser = {
       id: user.id,
       forename: user.forename,
+      username: user.username,
     };
     expect(res).status(200);
     expect(res.body).deep.equal(expectedUser);
@@ -64,13 +84,13 @@ describe('/users', function() {
 
   it('Other users within the same group can retrieve a user', function*() {
     const user1 = {
-      email: 'Julien@julien.com',
+      username: 'Julien@julien.com',
       password: 'Hello World',
       forename: 'Julien',
     };
 
     const user2 = {
-      email: 'johan@johan.com',
+      username: 'johan@johan.com',
       password: 'Hello France',
       forename: 'Johan',
     };
@@ -79,7 +99,7 @@ describe('/users', function() {
 
     user1.id = yield api.createUser(user1);
     user2.id = yield api.createUser(user2);
-    yield api.login(user1.email, user1.password);
+    yield api.login(user1.username, user1.password);
 
     // Trying to fetch the user without a common group should fail
     let res = yield chakram.get(
@@ -102,6 +122,7 @@ describe('/users', function() {
     expect(res.body).deep.equal({
       id: user2.id,
       forename: user2.forename,
+      username: user2.username,
     });
   });
 
@@ -109,13 +130,13 @@ describe('/users', function() {
 
     // setup: 2 users in 1 group
     const user1 = {
-      email: 'Julien@julien.com',
+      username: 'Julien@julien.com',
       password: 'Hello World',
       forename: 'Julien',
     };
 
     const user2 = {
-      email: 'johan@johan.com',
+      username: 'johan@johan.com',
       password: 'Hello France',
       forename: 'Johan',
     };
@@ -124,7 +145,7 @@ describe('/users', function() {
 
     user1.id = yield api.createUser(user1);
     user2.id = yield api.createUser(user2);
-    yield api.login(user1.email, user1.password);
+    yield api.login(user1.username, user1.password);
 
     group.id = yield api.createGroup(group);
     // user 1 is already in group
@@ -156,7 +177,7 @@ describe('/users', function() {
     );
     expect(res).status(200);
     expect(res.body).deep.equal(
-      [{ id: 2, forename: 'Johan', email: 'johan@johan.com' }]
+      [{ id: 2, forename: 'Johan', username: 'johan@johan.com' }]
     );
 
     // user1 is the logged-in user, so trying with "myself" a swell
@@ -173,7 +194,7 @@ describe('/users', function() {
     );
     expect(res).status(200);
     expect(res.body).deep.equal(
-      [{ id: 2, forename: 'Johan', email: 'johan@johan.com' }]
+      [{ id: 2, forename: 'Johan', username: 'johan@johan.com' }]
     );
   });
 });

@@ -25,7 +25,7 @@ need to run `npm i` first to install dependencies.
 
 ## API login
 
-The API root is `/api/v1`. All following routes are relative to this root.
+The API root is `/api/v2`. All following routes are relative to this root.
 
 ### POST `/login`
 
@@ -34,10 +34,13 @@ The input can be either
 `application/json` or `application/x-www-form-urlencoded`, with the correct `Content-Type` header. For example, as JSON:
 ```json
 {
-  "email": "john@email.com",
+  "username": "john@email.com",
   "password": "password"
 }
 ```
+
+The username could be anything, it's not especially an email. It is what was
+specified at the user creation time.
 
 #### Output
 
@@ -151,7 +154,8 @@ This returns the list of recipients for this reminder.
   {
     "id": 1,
     "forename": "Jane",
-    "email": "Jane@email.com"
+    "username": "Jane@email.com",
+    "phoneNumber": "0123456789" // possibly absent
   },
   ...
 ]
@@ -283,20 +287,20 @@ This creates a new user. This doesn't need any authentication.
 
 #### Input
 
-All properties must be present. There is no default value. For example:
+All properties but `phoneNumber` must be present. For example:
 ```json
 {
   "forename": "Sherlock",
-  "email": "Sherlock.Holmes@baker-street.co.uk",
-  "password": "MoriartyShallReturn"
+  "username": "Sherlock.Holmes@baker-street.co.uk",
+  "password": "MoriartyShallReturn",
+  "phoneNumber": "0123456789" // optional
 }
 ```
 
+The username could be any string as long as it's unique in our database.
+
 Note that the password is stored in database using a modern hash algorithm
 (Argon2 currently).
-
-Currently the user is created as-is. In the future we'll implement a 2-step
-creation mechanism where the email would be used.
 
 #### Output
 * 201 if request succeeded, with `location` header indicating the new resource
@@ -305,7 +309,7 @@ creation mechanism where the email would be used.
 {
   "id": 1,
   "forename": "Sherlock",
-  "email": "Sherlock.Holmes@baker-street.co.uk"
+  "username": "Sherlock.Holmes@baker-street.co.uk"
 }
 ```
 * 400 if some properties are missing or invalid.
@@ -323,7 +327,8 @@ This returns information about a user.
 {
   "id": 1,
   "forename": "Sherlock",
-  "email": "Sherlock.Holmes@baker-street.co.uk"
+  "username": "Sherlock.Holmes@baker-street.co.uk",
+  "phoneNumber": "01234567890" // could be missing
 }
 ```
 * 404 if no user with this ID exists or if the logged-in user is not in a common
@@ -342,7 +347,7 @@ This returns information about groups a user belongs to.
   {
     "id": 1,
     "name": "Holmes",
-    "location": "https://server.name/api/v1/groups/1",
+    "location": "https://server.name/api/v2/groups/1",
     "isAdmin": "true"
   },
   {
@@ -366,9 +371,8 @@ This returns all users this user has relations with through at least 1 group.
   {
     "id": 2,
     "forename": "James",
-    "email": "James.Moriarty@ReichenbachFalls.co.uk",
-    "commonGroups": ["Smart_People"],
-    "location": "https://server.name/api/v1/users/2"
+    "username": "James.Moriarty@ReichenbachFalls.co.uk",
+    "phoneNumber": "0123456789" // could be absent
   },
   {
     ...
@@ -378,7 +382,7 @@ This returns all users this user has relations with through at least 1 group.
 * 404 if no user with this ID exists or if this user is not the logged-in user.
 
 
-### PATCH `/users/{id}`
+### PATCH `/users/{id}` (unimplemented)
 
 Required: the header `Authorization` that identifies a user. A user can only be
 modified by himself.
@@ -396,7 +400,8 @@ property needs to be present.
 {
   "currentPassword": "MoriartyShallReturn",
   "forename": "Sherlock",
-  "email": "Sherlock.Holmes@bakerstreet.uk",
+  "username": "Sherlock.Holmes@bakerstreet.uk",
+  "phoneNumber": "0123456789",
   "newPassword": "HoundOfTheBaskervilles"
 }
 ```
@@ -475,7 +480,7 @@ This returns information about a group.
 ```
 * 404 if no group with this ID exists or if the user doesn't belong to this group.
 
-### GET `/groups/{id}/members`
+### GET `/groups/{id}/members` (unimplemented)
 Required: the header `Authorization` that identifies a user. Only a user that
 belongs to this group can see its users.
 
@@ -488,9 +493,10 @@ This returns information about users belonging to this group.
   {
     "id": 1,
     "forename": "Sherlock",
-    "email": "Sherlock.Holmes@baker-street.co.uk",
+    "username": "Sherlock.Holmes@baker-street.co.uk",
+    "phoneNumber": "0123456789", // could be missing
     "isAdmin": true,
-    "location": "https://server.name/api/v1/users/1"
+    "location": "https://server.name/api/v2/users/1"
   },
   {
     ...

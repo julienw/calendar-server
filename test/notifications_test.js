@@ -27,17 +27,17 @@ describe('notifications', function() {
 
   const users = [
     {
-      email: 'john@helloworld.com',
+      username: 'john@helloworld.com',
       password: 'Hello World',
       forename: 'John',
     },
     {
-      email: 'Julien@julien.com',
+      username: 'Julien@julien.com',
       password: 'Hello World',
       forename: 'Julien',
     },
     {
-      email: 'johan@johan.com',
+      username: 'johan@johan.com',
       password: 'Hello France',
       forename: 'Johan',
     }
@@ -111,7 +111,7 @@ describe('notifications', function() {
     for (const user of users) {
       user.id = yield api.createUser(user);
     }
-    yield api.login(users[0].email, users[0].password);
+    yield api.login(users[0].username, users[0].password);
     const groupId = yield api.createGroup({ name: 'CD_Staff' });
     yield api.addUserToGroup(2, groupId);
     yield api.addUserToGroup(3, groupId);
@@ -146,7 +146,7 @@ describe('notifications', function() {
     beforeEach(function*() {
       mq.connect(mqSocket);
       for (let i = 0; i < users.length; i++) {
-        yield api.login(users[i].email, users[i].password);
+        yield api.login(users[i].username, users[i].password);
         yield api.createSubscription(subscriptions[i]);
       }
     });

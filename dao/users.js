@@ -22,7 +22,11 @@ function cryptCompare(plainText, hashed) {
 }
 
 function sanitizeUser(user) {
+  if (user.phone_number) {
+    user.phoneNumber = user.phone_number;
+  }
   delete user.password_hash;
+  delete user.phone_number;
   return user;
 }
 
@@ -31,7 +35,10 @@ module.exports = {
    * Creates a new user in the database.
    *
    * @param {Object} newUserObject The user's information.
-   * @param {String} newUserObject.email The user's email address
+   * @param {String} newUserObject.username The user's username for
+   * authentication
+   * @param {String} newUserObject.phoneNumber The user's phone number for
+   * texting
    * @param {String} newUserObject.password The user's password. It will be
    * stored hashed in the database using the argon2 algorithm.
    * @param {String} newUserObject.forename The user's forename (obviously :) )
@@ -40,7 +47,12 @@ module.exports = {
    */
   create(newUserObject) {
     debug('create(%o)', newUserObject);
-    checkPropertyType(newUserObject, 'email', 'string');
+    checkPropertyType(newUserObject, 'username', 'string');
+    if (newUserObject.phoneNumber === undefined) {
+      newUserObject.phoneNumber = null;
+    } else {
+      checkPropertyType(newUserObject, 'phoneNumber', 'string');
+    }
     checkPropertyType(newUserObject, 'password', 'string');
     checkPropertyType(newUserObject, 'forename', 'string');
 
@@ -52,12 +64,13 @@ module.exports = {
           db.run(
             `
             INSERT INTO
-              user(forename, email, password_hash)
+              user(forename, username, phone_number, password_hash)
             VALUES
-              (?, ?, ?)
+              (?, ?, ?, ?)
             `,
             newUserObject.forename,
-            newUserObject.email,
+            newUserObject.username,
+            newUserObject.phoneNumber,
             password
           )
         )
@@ -67,22 +80,22 @@ module.exports = {
 
   /**
    * This is the function to check a user's password.
-   * @param {String} email Email to identify the user
+   * @param {String} username Username to identify the user
    * @param {String} tentativePassword Input password to check
    * @returns {Promise<User>} The Promise is resolved with a user object if the
    * user exists and the password is correct. The user object is never undefined
    * or null if the promise is resolved.
    */
-  authenticate(email, tentativePassword) {
-    debug('authenticate(email=%s)', email);
+  authenticate(username, tentativePassword) {
+    debug('authenticate(username=%s)', username);
     return database.ready
       .then(db => db.get(
-        'SELECT * FROM user WHERE email = ?',
-        email
+        'SELECT * FROM user WHERE username = ?',
+        username
       ))
       .then(user => {
         if (!user) {
-          throw notFoundError('email', email);
+          throw notFoundError('username', username);
         }
 
         return cryptCompare(tentativePassword, user.password_hash)
@@ -133,19 +146,19 @@ module.exports = {
       )
       .then(users => users.map(sanitizeUser));
   },
-  getByEmail(email) {
-    debug('getByEmail(email=%s)', email);
+  getByUsername(username) {
+    debug('getByUsername(username=%s)', username);
 
     return database.ready
       .then((db) => {
         return db.get(
-          'SELECT * FROM user WHERE email = ?',
-          email
+          'SELECT * FROM user WHERE username = ?',
+          username
         );
       })
       .then((user) => {
         if (!user) {
-          throw notFoundError('email', email);
+          throw notFoundError('username', username);
         }
 
         return sanitizeUser(user);

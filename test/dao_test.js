@@ -29,8 +29,13 @@ describe('dao', () => {
 
         const recipients = yield reminders.getRecipients(result[0].id);
         expect(recipients).deep.equal([
-          { id: 1, forename: 'Ana', email: 'email@email.com' },
-          { id: 2, forename: 'Bob', email: 'a@email.com' },
+          { id: 1, forename: 'Ana', username: 'email@email.com' },
+          {
+            id: 2,
+            forename: 'Bob',
+            username: 'a@email.com',
+            phoneNumber: '1234567890',
+          },
         ]);
       });
     });
@@ -63,8 +68,13 @@ describe('dao', () => {
         expect(reminder.action).to.equal('attend important meeting');
         const recipients = yield reminders.getRecipients(1);
         expect(recipients).deep.equal([
-          { id: 1, forename: 'Ana', email: 'email@email.com' },
-          { id: 2, forename: 'Bob', email: 'a@email.com' },
+          { id: 1, forename: 'Ana', username: 'email@email.com' },
+          {
+            id: 2,
+            forename: 'Bob',
+            username: 'a@email.com',
+            phoneNumber: '1234567890',
+          },
         ]);
       });
     });
@@ -95,8 +105,13 @@ describe('dao', () => {
         expect(reminder.action).to.equal('dinner with friends');
         const recipients = yield reminders.getRecipients(1);
         expect(recipients).deep.equal([
-          { id: 1, forename: 'Ana', email: 'email@email.com' },
-          { id: 3, forename: 'Sam', email: 'b@email.com' },
+          { id: 1, forename: 'Ana', username: 'email@email.com' },
+          {
+            id: 3,
+            forename: 'Sam',
+            username: 'b@email.com',
+            phoneNumber: '2345678901',
+          },
         ]);
       });
     });

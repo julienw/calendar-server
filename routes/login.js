@@ -6,16 +6,16 @@ const config = require('../config');
 const { UnauthorizedError } = require('../utils/errors');
 
 /**
- * @param {String} req.body.email Authenticating user
+ * @param {String} req.body.username Authenticating user
  * @param {String} req.body.password Password for this user
  * @returns {void}
  */
 module.exports = function login(req, res, next) {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  debug('login with credentials %o', { email: email, password: 'XXX' });
+  debug('login with credentials %o', { username, password: 'XXX' });
 
-  users.authenticate(email, password)
+  users.authenticate(username, password)
     .then(user => {
       const token = jwt.sign(
         { id: user.id }, config.authenticationSecret, { expiresIn: '30d' }

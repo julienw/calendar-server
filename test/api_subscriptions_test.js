@@ -55,10 +55,10 @@ describe('/subscriptions', function() {
     const user = {
       forename: 'Jane',
       password: 'Hello World',
-      email: 'jane@family.com',
+      username: 'jane@family.com',
     };
     user.id = yield api.createUser(user);
-    yield api.login(user.email, user.password);
+    yield api.login(user.username, user.password);
   });
 
   afterEach(function*() {

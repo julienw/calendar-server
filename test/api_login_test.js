@@ -7,7 +7,7 @@ const api = require('./api_tooling');
 
 describe('/login', function() {
   const user = {
-    email: 'Julien@julien.com',
+    username: 'Julien@julien.com',
     password: 'Hello World',
     forename: 'Julien',
   };
@@ -25,7 +25,7 @@ describe('/login', function() {
   it('can login', function*() {
     const res = yield chakram.post(
       `${config.apiRoot}/login`,
-      { email: user.email, password: user.password }
+      { username: user.username, password: user.password }
     );
     expect(res).status(200);
     expect(res).schema({
@@ -41,14 +41,14 @@ describe('/login', function() {
   it('can\'t login with bad credentials', function*() {
     let res = yield chakram.post(
       `${config.apiRoot}/login`,
-      { email: 'billou@gates.com', password: user.password }
+      { username: 'billou@gates.com', password: user.password }
     );
 
     expect(res).status(401);
 
     res = yield chakram.post(
       `${config.apiRoot}/login`,
-      { email: user.email, password: 'foobar' }
+      { username: user.username, password: 'foobar' }
     );
 
     expect(res).status(401);

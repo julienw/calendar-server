@@ -21,7 +21,7 @@ describe('dao:users', () => {
       const TEST_EMAIL = 'test@example.com';
       const TEST_PASSWORD = '/0!/~passw0rd';
       yield users.create({
-        email: TEST_EMAIL,
+        username: TEST_EMAIL,
         password: TEST_PASSWORD,
         forename: 'Person'
       });
@@ -29,7 +29,7 @@ describe('dao:users', () => {
       const user = yield users.authenticate(TEST_EMAIL, TEST_PASSWORD);
       expect(user).deep.equal({
         id: 4,
-        email: TEST_EMAIL,
+        username: TEST_EMAIL,
         forename: 'Person'
       });
     });
@@ -41,7 +41,7 @@ describe('dao:users', () => {
 
       expect(user).to.deep.equal({
         forename: 'Ana',
-        email: 'email@email.com',
+        username: 'email@email.com',
         id: 1
       });
     });
@@ -52,7 +52,7 @@ describe('dao:users', () => {
       const user = yield users.getById(1);
       expect(user).to.deep.equal({
         forename: 'Ana',
-        email: 'email@email.com',
+        username: 'email@email.com',
         id: 1,
       });
 
@@ -64,13 +64,13 @@ describe('dao:users', () => {
     });
   });
 
-  describe('getUserFromEmail(email)', function() {
-    it('should get a user from their email address', function*() {
-      const user = yield users.getByEmail('email@email.com');
+  describe('getUserFromUsername(username)', function() {
+    it('should get a user from their username', function*() {
+      const user = yield users.getByUsername('email@email.com');
       expect(user).to.deep.equal({
         forename: 'Ana',
         id: 1,
-        email: 'email@email.com',
+        username: 'email@email.com',
       });
     });
   });
