@@ -3,7 +3,9 @@ const express = require('express');
 
 const users = require('../dao/users');
 const groups = require('../dao/groups');
-const { NotFoundError, ForbiddenError } = require('../utils/errors');
+const {
+  DuplicateUserError, NotFoundError, ForbiddenError
+} = require('../utils/errors');
 
 const router = express.Router();
 
@@ -40,12 +42,20 @@ router.post('/', (req, res, next) => {
   }).then((user) => {
     debug('User #%s is: %o', user.id, user);
 
-    delete user.email;
+    delete user.phoneNumber; // useless information here
     res
       .status(201)
       .location(`${req.baseUrl}/${user.id}`)
       .send(user);
-  }).catch(next);
+  }).catch(e => {
+    if (e.code === 'SQLITE_CONSTRAINT' && e.message.includes('UNIQUE')) {
+      e = new DuplicateUserError(
+        'duplicate_username',
+        'This username is already taken, please choose another one.'
+      );
+    }
+    next(e);
+  });
 });
 
 router.route('/:id(\\d+)')
@@ -76,7 +86,6 @@ router.route('/:id(\\d+)')
       .then(() => users.getById(requestedId))
       .then((user) => {
         debug('Found user %o', user);
-        delete user.email;
         res.send(user);
       }).catch(next);
   })

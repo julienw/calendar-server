@@ -31,5 +31,6 @@ module.exports = {
   ForbiddenError: createError(403, 'ForbiddenError'),
   NotFoundError,
   DuplicateEndpointError: createError(409, 'DuplicateEndpointError'),
+  DuplicateUserError: createError(409, 'DuplicateUserError'),
   InternalError: createError(500, 'InternalError'),
 };

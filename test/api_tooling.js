@@ -3,11 +3,11 @@ const co = require('co');
 const config = require('./config');
 const expect = chakram.expect;
 
-function login(email, password) {
+function login(username, password) {
   return co(function*() {
     const res = yield chakram.post(
       `${config.apiRoot}/login`,
-      { email, password }
+      { username, password }
     );
 
     expect(res).status(200);

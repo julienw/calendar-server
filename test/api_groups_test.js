@@ -12,13 +12,14 @@ describe('/groups', function() {
     yield serverManager.start();
 
     const user = {
-      email: 'Julien@julien.com',
+      username: 'Julien@julien.com',
+      phoneNumber: '0123456789',
       password: 'Hello World',
       forename: 'Julien',
     };
 
     user.id = yield api.createUser(user);
-    yield api.login(user.email, user.password);
+    yield api.login(user.username, user.password);
   });
 
   afterEach(function* () {
@@ -58,13 +59,14 @@ describe('/groups', function() {
       api.logout();
 
       const user2 = {
-        email: 'johan@johan.com',
+        username: 'johan@johan.com',
+        phoneNumber: '1234567890',
         password: 'Hello France',
         forename: 'Johan',
       };
 
       user2.id = yield api.createUser(user2);
-      yield api.login(user2.email, user2.password);
+      yield api.login(user2.username, user2.password);
 
       const res = yield chakram.get(
         `${config.apiRoot}/groups/${group.id}`

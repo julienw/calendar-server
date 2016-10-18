@@ -28,7 +28,8 @@ const schema = `
   CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     forename VARCHAR(128) NOT NULL,
-    email VARCHAR(256) NOT NULL UNIQUE,
+    username TEXT NOT NULL UNIQUE,
+    phone_number TEXT,
     password_hash VARCHAR(128) NOT NULL
   );
 
@@ -81,21 +82,21 @@ const schema = `
 const testData = `
   DELETE FROM user;
   INSERT INTO
-    user (forename, email, password_hash)
+    user (forename, username, phone_number, password_hash)
   VALUES
-    ("Ana", "email@email.com",
+    ("Ana", "email@email.com", NULL,
      "$argon2i$v=19$m=4096,t=3,p=1$6xrsrimi0fCbwmMuiu9/lg$CHF6oMYRFa9sGbaRmrrK4Ev/gtNr4EQSoWZzi4S+J4c");
 
   INSERT INTO
-    user (forename, email, password_hash)
+    user (forename, username, phone_number, password_hash)
   VALUES
-    ("Bob", "a@email.com",
+    ("Bob", "a@email.com", "1234567890",
     "$argon2i$v=19$m=4096,t=3,p=1$6xrsrimi0fCbwmMuiu9/lg$CHF6oMYRFa9sGbaRmrrK4Ev/gtNr4EQSoWZzi4S+J4c");
 
   INSERT INTO
-    user (forename, email, password_hash)
+    user (forename, username, phone_number, password_hash)
   VALUES
-    ("Sam", "b@email.com",
+    ("Sam", "b@email.com", "2345678901",
     "$argon2i$v=19$m=4096,t=3,p=1$6xrsrimi0fCbwmMuiu9/lg$CHF6oMYRFa9sGbaRmrrK4Ev/gtNr4EQSoWZzi4S+J4c");
 
   DELETE FROM "group";
