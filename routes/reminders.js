@@ -119,9 +119,22 @@ router.get('/', (req, res, next) => {
     operationPromise = reminders.getAllForUserByStart(userId, start, limit);
   }
 
-  operationPromise.then(
-    rows => res.send(rows)
-  ).catch(next);
+  operationPromise
+    .then(rows => {
+      const promises = rows.map(row =>
+        reminders.getRecipients(row.id)
+          .then(recipients => {
+            row.recipients = recipients.map(
+              recipient => ({ userId: recipient.id, name: recipient.forename })
+            );
+          })
+      );
+      return Promise.all(promises).then(() => rows);
+    })
+    .then(
+      rows => res.send(rows)
+    )
+    .catch(next);
 });
 
 router.post('/', (req, res, next) => {

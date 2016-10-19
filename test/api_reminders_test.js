@@ -244,6 +244,9 @@ describe('/reminders', function() {
 
     res = yield chakram.get(remindersUrl);
     expect(res.body).lengthOf(1);
+    expect(res.body[0].recipients).deep.equal(
+      [{ name: users[1].forename, userId: users[1].id }]
+    );
 
     yield chakram.post(remindersUrl, initialReminder);
     res = yield chakram.get(remindersUrl);

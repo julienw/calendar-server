@@ -82,7 +82,8 @@ GET parameters:
   "id": 1,
   "action": "Pick up kids at school",
   "created": 1466588359000,
-  "due": 1466613000000
+  "due": 1466613000000,
+  "recipients": [{ "userId": 1, "name": "John" }]
 }]
 ```
 
