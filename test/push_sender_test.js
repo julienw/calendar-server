@@ -1,24 +1,30 @@
 const sinon = require('sinon');
-const path = require('path');
+const request = require('request');
+const webpush = require('web-push');
 
 const mq = require('zmq').socket('push');
-const mqPort = 4001;
 
-const config = require('../config.js');
-config.mqPort = mqPort;
-config.profile = path.join(__dirname, '../profiles/test');
+const testConfig = require('./config');
+const appConfig = require('../config');
+appConfig.mqPort = testConfig.mqPort;
+appConfig.profile = testConfig.profilePath;
+appConfig.twilioPhoneNumber = 'PHONE_NUMBER';
+appConfig.twilioAuthToken = 'AUTH_TOKEN';
+appConfig.twilioAccountSID = 'ACCOUNT_SID';
+
+const serverManager = require('./server_manager');
+const db = require('../dao/database');
+const { testData } = require('../dao/schema');
 
 const { waitUntilReminderHasStatus } = require('./lib/wait');
 
 describe('push notification sender', function() {
-  let webpush;
-  const mqUrl = `tcp://127.0.0.1:${mqPort}`;
-
+  const mqUrl = `tcp://127.0.0.1:${testConfig.mqPort}`;
 
   before(() => {
     mq.bindSync(mqUrl);
-    webpush = require('web-push');
-    sinon.stub(webpush, 'sendNotification');
+    sinon.stub(webpush, 'sendNotification').returns(Promise.resolve());
+    sinon.stub(request, 'post').yields(null, { statusCode: 200 });
 
     require('../push_sender'); // starts up
   });
@@ -26,12 +32,32 @@ describe('push notification sender', function() {
   after(() => {
     mq.unbindSync(mqUrl);
     webpush.sendNotification.restore();
+    request.post.restore();
+  });
+
+  beforeEach(function*() {
+    // Reset the database state between each test run
+    serverManager.reinitProfile();
+    yield db.init(testConfig.profilePath);
+    const dbInstance = yield db.ready;
+    yield dbInstance.exec(testData);
+  });
+
+  afterEach(() => {
+    webpush.sendNotification.reset();
+    request.post.reset();
   });
 
   it('should emit push notifications on new messages', function*() {
-    this.timeout(10000);
-
     const reminderId = 1;
+    const subscription = {
+      endpoint: 'https://an.end.point',
+      keys: {
+        p256dh: 'A fake public key',
+        auth: 'A fake auth token'
+      },
+    };
+
     const message = {
       reminder: {
         id: reminderId,
@@ -39,20 +65,15 @@ describe('push notification sender', function() {
         due: 1466613000000,
         status: 'pending',
       },
-      subscription: {
-        id: 1,
-        userId: 1,
-        title: 'Firefox 47 on Linux',
+      notifications: [{
         subscription: {
-          endpoint: 'https://an.end.point',
-          keys: {
-            p256dh: 'A fake public key',
-            auth: 'A fake auth token'
-          },
-        },
-      }
+          id: 1,
+          userId: 1,
+          title: 'Firefox 47 on Linux',
+          subscription,
+        }
+      }]
     };
-    const subscription = message.subscription.subscription;
 
     mq.send(JSON.stringify(message));
 
@@ -66,5 +87,67 @@ describe('push notification sender', function() {
         payload: JSON.stringify(message.reminder),
       }
     );
+  });
+
+  it('should emit SMS notifications on new messages', function*() {
+    const reminderId = 1;
+    const sms = {
+      target: '+12123456789',
+      body: 'some body'
+    };
+
+    const message = {
+      reminder: {
+        id: reminderId,
+        action: 'Pick up kids at school',
+        due: 1466613000000,
+        status: 'pending',
+      },
+      notifications: [{ sms }]
+    };
+    mq.send(JSON.stringify(message));
+    yield waitUntilReminderHasStatus(reminderId, 'done');
+    sinon.assert.calledWithMatch(request.post, appConfig.twilioAccountSID, {
+      auth: {
+        user: appConfig.twilioAccountSID,
+        pass: appConfig.twilioAuthToken
+      },
+      form: {
+        Body: sms.body,
+        To: sms.target,
+        From: appConfig.twilioPhoneNumber
+      }
+    });
+  });
+
+  it('should properly put US numbers in international format', function*() {
+    const reminderId = 1;
+    const sms = {
+      target: '2123456789',
+      body: 'some body'
+    };
+
+    const message = {
+      reminder: {
+        id: reminderId,
+        action: 'Pick up kids at school',
+        due: 1466613000000,
+        status: 'pending',
+      },
+      notifications: [{ sms }]
+    };
+    mq.send(JSON.stringify(message));
+    yield waitUntilReminderHasStatus(reminderId, 'done');
+    sinon.assert.calledWithMatch(request.post, appConfig.twilioAccountSID, {
+      auth: {
+        user: appConfig.twilioAccountSID,
+        pass: appConfig.twilioAuthToken
+      },
+      form: {
+        Body: sms.body,
+        To: '+12123456789',
+        From: appConfig.twilioPhoneNumber
+      }
+    });
   });
 });

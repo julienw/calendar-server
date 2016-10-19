@@ -18,8 +18,6 @@ function assertFullRemindersAreEqual(actual, expected,
 }
 
 describe('/reminders', function() {
-  this.timeout(10000); // Functional tests can last longer than the default 2s.
-
   const remindersUrl = `${config.apiRoot}/reminders`;
 
   const users = [

@@ -10,7 +10,7 @@
   },
   "rules": {
     "array-callback-return": 2,
-    "quotes": [2, "single"],
+    "quotes": [2, "single", {"allowTemplateLiterals": true }],
     "no-unexpected-multiline": 2,
     "valid-jsdoc": 1,
     "block-scoped-var": 2,
