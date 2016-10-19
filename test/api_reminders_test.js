@@ -66,7 +66,7 @@ describe('/reminders', function() {
 
   it('should implement basic CRUD functionality', function*() {
     const expectedLocation = `${remindersUrl}/1`;
-    const expectedReminder = {
+    let expectedReminder = {
       id: 1,
       action: initialReminder.action,
       due: initialReminder.due,
@@ -93,6 +93,7 @@ describe('/reminders', function() {
     expect(res).header('location', '/api/v2/reminders/1');
     assertFullRemindersAreEqual(res.body, expectedReminder,
       timestampBeforeCreation, timestampAfterCreation);
+    const reminderId = res.body.id;
 
     res = yield chakram.get(expectedLocation);
     expect(res).status(200);
@@ -129,6 +130,51 @@ describe('/reminders', function() {
       }]
     );
 
+    // checking partial updates
+    res = yield chakram.patch(expectedLocation, {});
+    expect(res).status(400);
+
+    res = yield chakram.patch(expectedLocation, { due: initialReminder.due });
+    expect(res).status(200);
+    expectedReminder = {
+      id: reminderId,
+      action: updatedReminder.action,
+      due: initialReminder.due,
+      status: 'waiting',
+    };
+    assertFullRemindersAreEqual(res.body, expectedReminder,
+      timestampBeforeCreation, timestampAfterCreation);
+
+    res = yield chakram.patch(
+      expectedLocation, { action: initialReminder.action }
+    );
+    expect(res).status(200);
+    expectedReminder = {
+      id: reminderId,
+      action: initialReminder.action,
+      due: initialReminder.due,
+      status: 'waiting',
+    };
+    assertFullRemindersAreEqual(res.body, expectedReminder,
+      timestampBeforeCreation, timestampAfterCreation);
+
+    res = yield chakram.patch(
+      expectedLocation, {
+        action: updatedReminder.action,
+        due: updatedReminder.due
+      }
+    );
+    expect(res).status(200);
+    expectedReminder = {
+      id: reminderId,
+      action: updatedReminder.action,
+      due: updatedReminder.due,
+      status: 'waiting',
+    };
+    assertFullRemindersAreEqual(res.body, expectedReminder,
+      timestampBeforeCreation, timestampAfterCreation);
+
+    // deletes
     res = yield chakram.delete(expectedLocation);
     expect(res).status(204);
 

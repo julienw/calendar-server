@@ -168,7 +168,7 @@ router.route('/:id(\\d+)')
     }
   )
   .put((req, res, next) => {
-    const id = req.params.id;
+    const id = +req.params.id;
 
     const newReminder = req.body;
     const loggedId = +req.user.id;
@@ -182,6 +182,21 @@ router.route('/:id(\\d+)')
     // Check that all recipients share a common group with the logged in user.
     checkAllRecipientsShareCommonGroupWithUser(newReminder.recipients, loggedId)
       .then(() => reminders.update(id, req.body))
+      .then(() => {
+        debug('Reminder #%s has been updated in database', id);
+
+        return reminders.show(id);
+      })
+      .then((reminder) => {
+        debug('Reminder #%s has been updated: %o', id, reminder);
+        res.send(reminder);
+      })
+      .catch(next);
+  })
+  .patch((req, res, next) => {
+    const id = +req.params.id;
+
+    reminders.updatePartial(id, req.body)
       .then(() => {
         debug('Reminder #%s has been updated in database', id);
 

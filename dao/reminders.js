@@ -253,6 +253,37 @@ module.exports = {
       );
   },
 
+  updatePartial(id, updatedReminder) {
+    debug('updatePartial(id=%s)', id);
+
+    const updates = [];
+    const args = [];
+
+    if ('action' in updatedReminder) {
+      checkPropertyType(updatedReminder, 'action', 'string');
+      updates.push('action = ?');
+      args.push(updatedReminder.action);
+    }
+
+    if ('due' in updatedReminder) {
+      checkPropertyType(updatedReminder, 'due', 'number');
+      updates.push('due = ?');
+      args.push(updatedReminder.due);
+    }
+
+    if (!updates.length) {
+      return Promise.reject(new InvalidInputError(
+        'empty_input',
+        'You need to supply at least one change.'
+      ));
+    }
+
+    const statement = `reminder SET ${updates.join(', ')} WHERE id = ?`;
+    args.push(id);
+
+    return database.ready.then(db => db.update(statement, args));
+  },
+
   deleteRecipient(id, userId) {
     debug('deleteRecipient(id=%s, userId=%s)');
     return database.ready
