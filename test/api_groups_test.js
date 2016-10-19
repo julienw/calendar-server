@@ -7,7 +7,6 @@ const serverManager = require('./server_manager');
 const api = require('./api_tooling');
 
 describe('/groups', function() {
-
   beforeEach(function* () {
     yield serverManager.start();
 

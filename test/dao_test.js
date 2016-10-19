@@ -34,7 +34,7 @@ describe('dao', () => {
             id: 2,
             forename: 'Bob',
             username: 'a@email.com',
-            phoneNumber: '1234567890',
+            phoneNumber: '2134567890',
           },
         ]);
       });
@@ -73,7 +73,7 @@ describe('dao', () => {
             id: 2,
             forename: 'Bob',
             username: 'a@email.com',
-            phoneNumber: '1234567890',
+            phoneNumber: '2134567890',
           },
         ]);
       });
@@ -110,7 +110,7 @@ describe('dao', () => {
             id: 3,
             forename: 'Sam',
             username: 'b@email.com',
-            phoneNumber: '2345678901',
+            phoneNumber: '+12345678901',
           },
         ]);
       });

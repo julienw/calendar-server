@@ -30,4 +30,9 @@
      Generate a key here: https://code.google.com/apis/console/.
      NO DEFAULT VALUE */
   "gcmKey": "",
+
+  /* Twilio keys, necessary to send SMS */
+  "twilioAccountSID": "",
+  "twilioAuthToken": "",
+  "twilioPhoneNumber": ""
 }

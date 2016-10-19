@@ -23,8 +23,6 @@ function waitForMqMessage() {
 }
 
 describe('notifications', function() {
-  this.timeout(10000); // Tests last longer than the regular 2s-allowed-span.
-
   const users = [
     {
       username: 'john@helloworld.com',
@@ -100,11 +98,15 @@ describe('notifications', function() {
 
     return {
       reminder,
-      subscription: expectedSubscriptions[i]
+      notifications: [{
+        subscription: expectedSubscriptions[i]
+      }]
     };
   });
 
   const mqSocket = `tcp://127.0.0.1:${config.mqPort}`;
+
+  let groupId;
 
   beforeEach(function*() {
     yield serverManager.start();
@@ -112,7 +114,7 @@ describe('notifications', function() {
       user.id = yield api.createUser(user);
     }
     yield api.login(users[0].username, users[0].password);
-    const groupId = yield api.createGroup({ name: 'CD_Staff' });
+    groupId = yield api.createGroup({ name: 'CD_Staff' });
     yield api.addUserToGroup(2, groupId);
     yield api.addUserToGroup(3, groupId);
   });
@@ -169,6 +171,51 @@ describe('notifications', function() {
         const message = yield waitForMqMessage();
         expect(message).deep.equal(outputs[i]);
       }
+    });
+  });
+
+  describe('sms notifications', function() {
+    beforeEach(function() {
+      mq.connect(mqSocket);
+    });
+
+    afterEach(function() {
+      mq.disconnect(mqSocket);
+    });
+
+    it('Properly sends SMS notifications', function*() {
+      const user = {
+        username: '2123456789',
+        password: 'Hello World',
+        forename: 'Preeti',
+        phoneNumber: '2123456789',
+      };
+
+      user.id = yield api.createUser(user);
+
+      yield api.addUserToGroup(user.id, groupId);
+
+      const reminder = {
+        recipients: [{ id: user.id }],
+        action: 'Shopping',
+        due: Date.UTC(2016, 9, 19, 16) // 5pm UTC
+      };
+
+      reminder.id = yield api.createReminder(reminder);
+      reminder.status = 'waiting';
+      delete reminder.recipients;
+
+      const message = yield waitForMqMessage();
+      expect(message).deep.equal({
+        reminder,
+        notifications: [{
+          sms: {
+            // time is in PDT (summer time, UTC-7)
+            body: `Reminder from Abigail:\n${reminder.action} at 9:00 AM`,
+            target: user.phoneNumber
+          }
+        }]
+      });
     });
   });
 });

@@ -89,7 +89,7 @@ module.exports = {
      * non-existent. */
     return database.ready
       .then(db => db.all(
-        `SELECT subscription.*, user_reminder.user_id user_id
+        `SELECT DISTINCT subscription.*, user_reminder.user_id user_id
          FROM reminder, user_reminder
          LEFT JOIN subscription
           ON subscription.user_id = user_reminder.user_id

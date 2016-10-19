@@ -90,13 +90,13 @@ const testData = `
   INSERT INTO
     user (forename, username, phone_number, password_hash)
   VALUES
-    ("Bob", "a@email.com", "1234567890",
+    ("Bob", "a@email.com", "2134567890",
     "$argon2i$v=19$m=4096,t=3,p=1$6xrsrimi0fCbwmMuiu9/lg$CHF6oMYRFa9sGbaRmrrK4Ev/gtNr4EQSoWZzi4S+J4c");
 
   INSERT INTO
     user (forename, username, phone_number, password_hash)
   VALUES
-    ("Sam", "b@email.com", "2345678901",
+    ("Sam", "b@email.com", "+12345678901",
     "$argon2i$v=19$m=4096,t=3,p=1$6xrsrimi0fCbwmMuiu9/lg$CHF6oMYRFa9sGbaRmrrK4Ev/gtNr4EQSoWZzi4S+J4c");
 
   DELETE FROM "group";
