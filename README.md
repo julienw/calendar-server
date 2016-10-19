@@ -172,18 +172,41 @@ This allows to change a specific reminder.
 #### Input
 All properties must be present. For example, if we would like to change **only** the recipients (JSON):
 ```json
-[{
+{
   "recipients": [{ "userId": 2 }],
   "action": "Pick up kids at school",
   "due": 1466613000000
-}]
+}
 ```
 
 #### Output
 
-* 204 if request succeeded.
+* 200 with the new data if request succeeded.
 * 400 if some properties are missing or invalid.
 * 403 if some recipient doesn't have any common group with the logged in user.
+* 404 if no reminder with this ID exists or if the logged in user has no common
+  groups with at least 1 recipient.
+
+### PATCH `/reminders/{id}`
+
+Required: the header `Authorization` that identifies the user.
+
+This allows to partially change a specific reminder. We can't change recipients
+with this API.
+
+### Input
+All properties are optional.
+```json
+{
+  "action": "Pick up kids at school",
+  "due": 1466613000000
+}
+```
+
+### Output
+
+* 200 with the new data if request succeeded.
+* 400 if some properties are invalid or no data was passed.
 * 404 if no reminder with this ID exists or if the logged in user has no common
   groups with at least 1 recipient.
 
