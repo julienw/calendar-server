@@ -75,15 +75,15 @@ describe('notifications', function() {
   });
 
   const inputs = [{
-    recipients: [{ userId: 1 }],
+    recipients: [{ id: 1 }],
     action: 'Pick up kids at school',
     due: Date.now(),
   }, {
-    recipients: [{ userId: 2 }],
+    recipients: [{ id: 2 }],
     action: 'Buy milk',
     due: Date.now(),
   }, {
-    recipients: [{ userId: 3 }],
+    recipients: [{ id: 3 }],
     action: 'Go to school',
     due: Date.now(),
   }];

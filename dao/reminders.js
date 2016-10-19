@@ -163,7 +163,7 @@ module.exports = {
           const insertPromises = reminder.recipients.map((recipient) => db.run(
               `INSERT INTO user_reminder (user_id, reminder_id)
                 VALUES (?, ?)`,
-              recipient.userId,
+              recipient.id,
               reminderId
             ));
 
@@ -238,7 +238,7 @@ module.exports = {
 
           const deleteStatement =
             `DELETE FROM user_reminder WHERE ${whereClause}`;
-          const deleteArgs = recipients.map(recipient => recipient.userId);
+          const deleteArgs = recipients.map(recipient => recipient.id);
 
           const insertStatement = 'INSERT OR REPLACE INTO user_reminder ' +
             '(user_id, reminder_id) VALUES (?, ?)';
@@ -246,7 +246,7 @@ module.exports = {
           return db.run(deleteStatement, deleteArgs)
             .then(() =>
               Promise.all(recipients.map(
-                (recipient) => db.run(insertStatement, recipient.userId, id)
+                (recipient) => db.run(insertStatement, recipient.id, id)
               ))
             );
         })

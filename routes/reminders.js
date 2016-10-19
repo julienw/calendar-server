@@ -84,7 +84,7 @@ function checkLoggedUserIsAdmin(req, res, next) {
 
 function checkAllRecipientsShareCommonGroupWithUser(recipients, loggedId) {
   return Promise.all(recipients.map(
-    recipient => groupsDao.getCommonGroups(recipient.userId, loggedId)
+    recipient => groupsDao.getCommonGroups(recipient.id, loggedId)
   ))
     .then(commonGroupsArray =>
       commonGroupsArray.every(commonGroups => commonGroups.length)
@@ -125,7 +125,7 @@ router.get('/', (req, res, next) => {
         reminders.getRecipients(row.id)
           .then(recipients => {
             row.recipients = recipients.map(
-              recipient => ({ userId: recipient.id, name: recipient.forename })
+              recipient => ({ id: recipient.id, forename: recipient.forename })
             );
           })
       );
@@ -142,8 +142,8 @@ router.post('/', (req, res, next) => {
   const loggedId = +req.user.id;
 
   newReminder.recipients.forEach(recipient => {
-    if (recipient.userId === 'myself') {
-      recipient.userId = loggedId;
+    if (recipient.id === 'myself') {
+      recipient.id = loggedId;
     }
   });
 
@@ -187,8 +187,8 @@ router.route('/:id(\\d+)')
     const loggedId = +req.user.id;
 
     newReminder.recipients.forEach(recipient => {
-      if (recipient.userId === 'myself') {
-        recipient.userId = loggedId;
+      if (recipient.id === 'myself') {
+        recipient.id = loggedId;
       }
     });
 
