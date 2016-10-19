@@ -54,7 +54,7 @@ describe('dao', () => {
       it('should create a new reminder in the database and' +
         ' associate with users', function*() {
         const result = yield reminders.create({
-          recipients: [ { userId: 1 }, { userId: 2 }],
+          recipients: [ { id: 1 }, { id: 2 }],
           action: 'pick up from school',
           due: 1470839865000
         });
@@ -99,7 +99,7 @@ describe('dao', () => {
         yield reminders.update(1, {
           action: 'dinner with friends',
           due: 100,
-          recipients: [ { userId: 1 }, { userId: 3 } ]
+          recipients: [ { id: 1 }, { id: 3 } ]
         });
         const reminder = yield reminders.show(1);
         expect(reminder.action).to.equal('dinner with friends');

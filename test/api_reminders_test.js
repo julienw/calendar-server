@@ -43,7 +43,7 @@ describe('/reminders', function() {
   const group = { name: 'Staff' };
 
   const initialReminder = {
-    recipients: [{ userId: 2 }],
+    recipients: [{ id: 2 }],
     action: 'Pick up kids at school',
     due: Date.now() + 2 * 60 * 60 * 1000,
   };
@@ -74,7 +74,7 @@ describe('/reminders', function() {
     };
 
     const updatedReminder = {
-      recipients: [{ userId: 1 }],
+      recipients: [{ id: 1 }],
       action: 'Go shopping',
       due: Date.now() + 4 * 60 * 60 * 1000,
     };
@@ -186,7 +186,7 @@ describe('/reminders', function() {
   it('works using `myself` as user id', function*() {
     const reminder = Object.assign({}, initialReminder);
 
-    reminder.recipients = [{ userId: 'myself' }];
+    reminder.recipients = [{ id: 'myself' }];
 
     const timestampBeforeCreation = Date.now();
     const reminderId = yield api.createReminder(reminder);
@@ -245,7 +245,7 @@ describe('/reminders', function() {
     res = yield chakram.get(remindersUrl);
     expect(res.body).lengthOf(1);
     expect(res.body[0].recipients).deep.equal(
-      [{ name: users[1].forename, userId: users[1].id }]
+      [{ forename: users[1].forename, id: users[1].id }]
     );
 
     yield chakram.post(remindersUrl, initialReminder);
@@ -337,7 +337,7 @@ describe('/reminders', function() {
       action: initialReminder.action,
       due: initialReminder.due,
       status: 'waiting',
-      recipients: [{ userId: 2, forename: 'Jane' }]
+      recipients: [{ id: 2, forename: 'Jane' }]
     };
 
     const url = `${config.apiRoot}/groups/${group.id}/reminders`;
@@ -440,7 +440,7 @@ describe('/reminders', function() {
     yield api.addUserToGroup(users[2].id, group.id);
 
     const reminder = {
-      recipients: [{ userId: 2 }, { userId: 3 }],
+      recipients: [{ id: 2 }, { id: 3 }],
       action: 'Pick up kids at school',
       due: Date.now() + 2 * 60 * 60 * 1000,
     };
@@ -490,13 +490,13 @@ describe('/reminders', function() {
     const forbiddenReminder = Object.assign(
       {},
       initialReminder,
-      { recipients: [{ userId: 3 }] }
+      { recipients: [{ id: 3 }] }
     );
 
     const modifiedReminder = Object.assign(
       {},
       initialReminder,
-      { recipients: [{ userId: 1 }] }
+      { recipients: [{ id: 1 }] }
     );
 
     let res = yield chakram.post(remindersUrl, forbiddenReminder);

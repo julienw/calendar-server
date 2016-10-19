@@ -138,7 +138,7 @@ router.get('/:id(\\d+)/reminders',
             .then(recipients => {
               reminder.recipients = recipients.map(
                 recipient => ({
-                  userId: recipient.id,
+                  id: recipient.id,
                   forename: recipient.forename,
                 })
               );

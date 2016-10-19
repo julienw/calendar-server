@@ -83,7 +83,7 @@ GET parameters:
   "action": "Pick up kids at school",
   "created": 1466588359000,
   "due": 1466613000000,
-  "recipients": [{ "userId": 1, "name": "John" }]
+  "recipients": [{ "id": 1, "forename": "John" }]
 }]
 ```
 
@@ -99,7 +99,7 @@ URL for this reminder in the `Location` header.
 All properties must be present. There is no default value. For instance (JSON):
 ```json
 {
-  "recipients": [{ "userId": 1 }],
+  "recipients": [{ "id": 1 }],
   "action": "Pick up kids at school",
   "due": 1466613000000
 }
@@ -111,7 +111,7 @@ All properties must be present. There is no default value. For instance (JSON):
 ```json
 {
   "id": 1,
-  "recipients": [{ "userId": 1, "name": "John" }],
+  "recipients": [{ "id": 1, "forename": "John" }],
   "action": "Pick up kids at school",
   "created": 1466588359000,
   "due": 1466613000000
@@ -132,7 +132,7 @@ This gets the data about a specific reminder.
 ```json
 {
   "id": 1,
-  "recipients": [{ "userId": 1, "name": "John" }],
+  "recipients": [{ "id": 1, "forename": "John" }],
   "action": "Pick up kids at school",
   "created": 1466588359000,
   "due": 1466613000000
@@ -174,7 +174,7 @@ This allows to change a specific reminder.
 All properties must be present. For example, if we would like to change **only** the recipients (JSON):
 ```json
 {
-  "recipients": [{ "userId": 2 }],
+  "recipients": [{ "id": 2 }],
   "action": "Pick up kids at school",
   "due": 1466613000000
 }
@@ -576,7 +576,7 @@ GET parameters:
 ```json
 [{
   "id": 1,
-  "recipients": [{ "userId": 1, "forename": "Jane" }],
+  "recipients": [{ "id": 1, "forename": "Jane" }],
   "action": "Pick up kids at school",
   "created": 1466588359000,
   "due": 1466613000000
