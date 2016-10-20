@@ -70,6 +70,7 @@ describe('/reminders', function() {
       id: 1,
       action: initialReminder.action,
       due: initialReminder.due,
+      recipients: [{ id: users[1].id, forename: users[1].forename }],
       status: 'waiting',
     };
 
@@ -82,6 +83,7 @@ describe('/reminders', function() {
       id: 1,
       action: updatedReminder.action,
       due: updatedReminder.due,
+      recipients: [{ id: users[0].id, forename: users[0].forename }],
       status: 'waiting',
     };
 
@@ -140,6 +142,7 @@ describe('/reminders', function() {
       id: reminderId,
       action: updatedReminder.action,
       due: initialReminder.due,
+      recipients: expectedUpdatedReminder.recipients,
       status: 'waiting',
     };
     assertFullRemindersAreEqual(res.body, expectedReminder,
@@ -153,6 +156,7 @@ describe('/reminders', function() {
       id: reminderId,
       action: initialReminder.action,
       due: initialReminder.due,
+      recipients: expectedUpdatedReminder.recipients,
       status: 'waiting',
     };
     assertFullRemindersAreEqual(res.body, expectedReminder,
@@ -169,6 +173,7 @@ describe('/reminders', function() {
       id: reminderId,
       action: updatedReminder.action,
       due: updatedReminder.due,
+      recipients: expectedUpdatedReminder.recipients,
       status: 'waiting',
     };
     assertFullRemindersAreEqual(res.body, expectedReminder,
@@ -196,6 +201,7 @@ describe('/reminders', function() {
       id: reminderId,
       action: initialReminder.action,
       due: initialReminder.due,
+      recipients: [{ id: users[0].id, forename: users[0].forename }],
       status: 'waiting',
     };
 
