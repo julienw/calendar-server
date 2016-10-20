@@ -66,6 +66,10 @@ describe('dao', () => {
       it('should show a reminder with a specific ID', function*() {
         const reminder = yield reminders.show(1);
         expect(reminder.action).to.equal('attend important meeting');
+        expect(reminder.recipients).deep.equal([
+          { id: 1, forename: 'Ana' },
+          { id: 2, forename: 'Bob' },
+        ]);
         const recipients = yield reminders.getRecipients(1);
         expect(recipients).deep.equal([
           { id: 1, forename: 'Ana', username: 'email@email.com' },

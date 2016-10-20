@@ -176,17 +176,25 @@ module.exports = {
   show(id) {
     debug('show(id=%s)', id);
 
-    return database.ready
+    const getReminderPromise = database.ready
       .then(db => db.get(
         'SELECT * FROM reminder WHERE id = ?', id
-      ))
-      .then((row) => {
-        if (!row) {
-          throw notFoundError(id);
-        }
+      ));
 
-        return row;
-      });
+    return Promise.all([
+      getReminderPromise,
+      this.getRecipients(id)
+    ]).then(([row, recipients]) => {
+      if (!row) {
+        throw notFoundError(id);
+      }
+
+      row.recipients = recipients.map(
+        recipient => ({ id: recipient.id, forename: recipient.forename })
+      );
+
+      return row;
+    });
   },
 
   getRecipients(id) {
