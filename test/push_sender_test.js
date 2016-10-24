@@ -24,7 +24,7 @@ describe('push notification sender', function() {
   before(() => {
     mq.bindSync(mqUrl);
     sinon.stub(webpush, 'sendNotification').returns(Promise.resolve());
-    sinon.stub(request, 'post').yields(null, { statusCode: 200 });
+    sinon.stub(request, 'post').yields(null, { statusCode: 201 });
 
     require('../push_sender'); // starts up
   });
