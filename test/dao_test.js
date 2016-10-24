@@ -28,15 +28,17 @@ describe('dao', () => {
         expect(result[0].id).equal(1);
 
         const recipients = yield reminders.getRecipients(result[0].id);
-        expect(recipients).deep.equal([
-          { id: 1, forename: 'Ana', username: 'email@email.com' },
+        expect(recipients).contain(
+          { id: 1, forename: 'Ana', username: 'email@email.com' }
+        );
+        expect(recipients).contain(
           {
             id: 2,
             forename: 'Bob',
             username: 'a@email.com',
             phoneNumber: '2134567890',
-          },
-        ]);
+          }
+        );
       });
     });
 
@@ -108,15 +110,17 @@ describe('dao', () => {
         const reminder = yield reminders.show(1);
         expect(reminder.action).to.equal('dinner with friends');
         const recipients = yield reminders.getRecipients(1);
-        expect(recipients).deep.equal([
-          { id: 1, forename: 'Ana', username: 'email@email.com' },
+        expect(recipients).contain(
+          { id: 1, forename: 'Ana', username: 'email@email.com' }
+        );
+        expect(recipients).contain(
           {
             id: 3,
             forename: 'Sam',
             username: 'b@email.com',
             phoneNumber: '+12345678901',
-          },
-        ]);
+          }
+        );
       });
     });
 
