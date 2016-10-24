@@ -23,7 +23,7 @@ function sendSmsViaTwilio(number, message) {
       auth: { user: config.twilioAccountSID, pass: config.twilioAuthToken },
       form: { To: number, From: config.twilioPhoneNumber, Body: message }
     }, (err, res, _body) => {
-      if (!err && res.statusCode === 200) {
+      if (!err && res.statusCode < 300) {
         resolve();
       } else {
         reject(err || new Error(`Unsuccessful status ${res.statusCode}`));
