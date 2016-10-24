@@ -56,15 +56,15 @@ function getMessagesByText(reminder, recipients) {
 function sendNewNotifications() {
   const errorStatus = 'error-no-subscription';
 
-  const now = Date.now();
+  const dueDate = Date.now() + 5 * 60 * 1000; // 5min
   if (debug.enabled) {
     debug(
       'Polling reminders that are due at %d (%s)',
-      now, new Date(now)
+      dueDate, new Date(dueDate)
     );
   }
 
-  remindersDao.findAllDueReminders(now)
+  remindersDao.findAllDueReminders(dueDate)
     .then(reminders => {
       debug('Found reminders: %o', reminders);
 
