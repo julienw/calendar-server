@@ -1,7 +1,7 @@
 const debug = require('debug')('calendar-server:database');
 const path = require('path');
 
-const sqlite3 = require('sqlite3').verbose();
+const sqlite3 = require('sqlite3');
 const deferred = require('../utils/deferred');
 
 const { schema } = require('./schema');
@@ -87,6 +87,8 @@ const promisedDb = {
 const readyDeferred = deferred();
 
 function init(profileDir, name) {
+  debug('init(profileDir=%s, name=%s)', profileDir, name);
+
   const dbPath = path.join(profileDir, name || 'reminders_v2.db');
 
   // Promise chain is only used in tests. The rest of the code base uses
@@ -111,6 +113,7 @@ database.ready might not be ever resolved. Error: ${err}`);
 }
 
 function close() {
+  debug('close()');
   return new Promise((resolve, reject) => {
     db.close((err) => (err ? reject(err) : resolve()));
   });

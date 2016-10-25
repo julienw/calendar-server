@@ -20,6 +20,8 @@ function assertFullRemindersAreEqual(actual, expected,
 describe('/reminders', function() {
   const remindersUrl = `${config.apiRoot}/reminders`;
 
+  // Note we already have a master user with id 1; so the first user here will
+  // have the id 2.
   const users = [
     {
       forename: 'John',
@@ -41,13 +43,14 @@ describe('/reminders', function() {
   const group = { name: 'Staff' };
 
   const initialReminder = {
-    recipients: [{ id: 2 }],
+    recipients: [{ id: 3 }],
     action: 'Pick up kids at school',
     due: Date.now() + 2 * 60 * 60 * 1000,
   };
 
   beforeEach(function*() {
     yield serverManager.start();
+    yield api.loginAsMaster();
     for (const user of users) {
       user.id = yield api.createUser(user);
     }
@@ -73,7 +76,7 @@ describe('/reminders', function() {
     };
 
     const updatedReminder = {
-      recipients: [{ id: 1 }],
+      recipients: [{ id: users[0].id }],
       action: 'Go shopping',
       due: Date.now() + 4 * 60 * 60 * 1000,
     };
@@ -341,7 +344,7 @@ describe('/reminders', function() {
       action: initialReminder.action,
       due: initialReminder.due,
       status: 'waiting',
-      recipients: [{ id: 2, forename: 'Jane' }]
+      recipients: [{ id: users[1].id, forename: 'Jane' }]
     };
 
     const url = `${config.apiRoot}/groups/${group.id}/reminders`;
@@ -444,7 +447,7 @@ describe('/reminders', function() {
     yield api.addUserToGroup(users[2].id, group.id);
 
     const reminder = {
-      recipients: [{ id: 2 }, { id: 3 }],
+      recipients: [{ id: users[1].id }, { id: users[2].id }],
       action: 'Pick up kids at school',
       due: Date.now() + 2 * 60 * 60 * 1000,
     };
@@ -469,13 +472,17 @@ describe('/reminders', function() {
     // we shouldn't be able to delete a recipient
     res = yield chakram.delete(`${reminderLocation}/recipients/myself`);
     expect(res).status(404);
-    res = yield chakram.delete(`${reminderLocation}/recipients/2`);
+    res = yield chakram.delete(`${reminderLocation}/recipients/${users[1].id}`);
+    expect(res).status(403);
+    res = yield chakram.delete(`${reminderLocation}/recipients/${users[2].id}`);
     expect(res).status(403);
 
     // let's log in as user 2 then
     yield api.login(users[1].username, users[1].password);
     res = yield chakram.delete(`${reminderLocation}/recipients/myself`);
     expect(res).status(204);
+    res = yield chakram.delete(`${reminderLocation}/recipients/${users[2].id}`);
+    expect(res).status(403);
 
     res = yield chakram.get(`${reminderLocation}`);
     expect(res).status(200);
@@ -494,13 +501,13 @@ describe('/reminders', function() {
     const forbiddenReminder = Object.assign(
       {},
       initialReminder,
-      { recipients: [{ id: 3 }] }
+      { recipients: [{ id: users[2].id }] }
     );
 
     const modifiedReminder = Object.assign(
       {},
       initialReminder,
-      { recipients: [{ id: 1 }] }
+      { recipients: [{ id: users[0].id }] }
     );
 
     let res = yield chakram.post(remindersUrl, forbiddenReminder);

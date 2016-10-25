@@ -211,7 +211,7 @@ module.exports = {
   },
 
   delete(id) {
-    debug('delete(userId=%s, id=%s)', id);
+    debug('delete(id=%s)', id);
     return database.ready
       .then(db => db.delete(
         'FROM reminder WHERE id = ?',
@@ -293,7 +293,7 @@ module.exports = {
   },
 
   deleteRecipient(id, userId) {
-    debug('deleteRecipient(id=%s, userId=%s)');
+    debug('deleteRecipient(id=%s, userId=%s)', id, userId);
     return database.ready
       .then((db) =>
         db.delete(

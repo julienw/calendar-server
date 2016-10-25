@@ -175,7 +175,7 @@ router.route('/:id(\\d+)')
   .delete(
     checkLoggedUserIsAdmin,
     (req, res, next) => {
-      reminders.delete(req.user.id, req.params.id)
+      reminders.delete(req.params.id)
         .then(() => res.status(204).end())
         .catch(next);
     }

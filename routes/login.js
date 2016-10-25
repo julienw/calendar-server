@@ -1,5 +1,6 @@
 const debug = require('debug')('calendar-server:routes/login');
 const jwt = require('jsonwebtoken');
+
 const users = require('../dao/users');
 
 const config = require('../config');
@@ -17,8 +18,14 @@ module.exports = function login(req, res, next) {
 
   users.authenticate(username, password)
     .then(user => {
+      debug('Authentication successful: user=%o', user);
+      const userInfo = { id: user.id };
+      if (username === 'master') {
+        userInfo.isMaster = true;
+      }
+
       const token = jwt.sign(
-        { id: user.id }, config.authenticationSecret, { expiresIn: '30d' }
+        userInfo, config.authenticationSecret, { expiresIn: '365d' }
       );
       res.send({ token });
     })

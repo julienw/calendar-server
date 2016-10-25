@@ -9,4 +9,5 @@ module.exports = {
   mqPort,
   apiRoot: `http://localhost:${httpPort}/api/v2`,
   profilePath,
+  masterPassword: 'MASTER_PASSWORD',
 };

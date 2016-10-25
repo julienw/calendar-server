@@ -95,8 +95,8 @@ function sendNewNotifications() {
 
             if (erroredUsers.length) {
               throw new Error(
-                'Users %s had no way to be notified for reminder %s',
-                erroredUsers.join(', '), reminder.id
+                `User(s) ${erroredUsers.join(', ')} had no way to be ` +
+                `notified for reminder ${reminder.id}`
               );
             }
             return sendingMessagesPromise;

@@ -22,6 +22,10 @@ function login(username, password) {
   });
 }
 
+function loginAsMaster() {
+  return login('master', config.masterPassword);
+}
+
 function logout() {
   chakram.clearRequestDefaults();
   return Promise.resolve();
@@ -76,6 +80,7 @@ function createSubscription(subscription) {
 
 module.exports = {
   login,
+  loginAsMaster,
   logout,
   createUser,
   createGroup,
