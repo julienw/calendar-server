@@ -41,68 +41,78 @@ describe('notifications', function() {
     }
   ];
 
-  const subscriptions = [];
-  const expectedSubscriptions = [];
-  users.forEach((user, i) => {
-    const id = i + 1;
-    const subscription = {
-      title: `subscription_user_${id}`,
-      subscription: {
-        endpoint: `https://endpoint/user/${id}`,
-        keys: {
-          p256dh: 'some_base_64',
-          auth: 'some_base_64'
+  let subscriptions;
+  let expectedSubscriptions;
+  let inputs;
+  let outputs;
+
+  function setupExpectations() {
+    subscriptions = [];
+    expectedSubscriptions = [];
+
+    users.forEach((user, i) => {
+      const id = i + 1;
+      const userId = user.id;
+      const subscription = {
+        title: `subscription_user_${id}`,
+        subscription: {
+          endpoint: `https://endpoint/user/${id}`,
+          keys: {
+            p256dh: 'some_base_64',
+            auth: 'some_base_64'
+          }
         }
-      }
-    };
+      };
 
-    subscriptions.push(subscription);
+      subscriptions.push(subscription);
 
-    expectedSubscriptions.push({
-      id,
-      userId: id,
-      title: subscription.title,
-      subscription: {
-        endpoint: subscription.subscription.endpoint,
-        keys: {
-          p256dh: subscription.subscription.keys.p256dh,
-          auth: subscription.subscription.keys.auth
+      expectedSubscriptions.push({
+        id,
+        userId,
+        title: subscription.title,
+        subscription: {
+          endpoint: subscription.subscription.endpoint,
+          keys: {
+            p256dh: subscription.subscription.keys.p256dh,
+            auth: subscription.subscription.keys.auth
+          },
         },
-      },
+      });
     });
-  });
 
-  const inputs = [{
-    recipients: [{ id: 1 }],
-    action: 'Pick up kids at school',
-    due: Date.now(),
-  }, {
-    recipients: [{ id: 2 }],
-    action: 'Buy milk',
-    due: Date.now(),
-  }, {
-    recipients: [{ id: 3 }],
-    action: 'Go to school',
-    due: Date.now(),
-  }];
+    inputs = [{
+      recipients: [{ id: users[0].id }],
+      action: 'Pick up kids at school',
+      due: Date.now(),
+    }, {
+      recipients: [{ id: users[1].id }],
+      action: 'Buy milk',
+      due: Date.now(),
+    }, {
+      recipients: [{ id: users[2].id }],
+      action: 'Go to school',
+      due: Date.now(),
+    }];
 
-  const outputs = inputs.map((input, i) => {
-    const reminder = {
-      id: i + 1,
-      action: input.action,
-      due: input.due,
-      // FIXME: The status value shouldn't be sent to the message queue, as it
-      // gives an outdated information
-      status: 'waiting'
-    };
+    outputs = inputs.map((input, i) => {
+      const reminder = {
+        id: i + 1,
+        action: input.action,
+        due: input.due,
+        // FIXME: The status value shouldn't be sent to the message queue, as it
+        // gives an outdated information
+        status: 'waiting'
+      };
 
-    return {
-      reminder,
-      notifications: [{
-        subscription: expectedSubscriptions[i]
-      }]
-    };
-  });
+      return {
+        reminder,
+        notifications: [{
+          subscription: expectedSubscriptions[i]
+        }]
+      };
+    });
+
+  }
 
   const mqSocket = `tcp://127.0.0.1:${config.mqPort}`;
 
@@ -110,13 +120,17 @@ describe('notifications', function() {
 
   beforeEach(function*() {
     yield serverManager.start();
+    yield api.loginAsMaster();
     for (const user of users) {
       user.id = yield api.createUser(user);
     }
+
+    setupExpectations();
+
     yield api.login(users[0].username, users[0].password);
     groupId = yield api.createGroup({ name: 'CD_Staff' });
-    yield api.addUserToGroup(2, groupId);
-    yield api.addUserToGroup(3, groupId);
+    yield api.addUserToGroup(users[1].id, groupId);
+    yield api.addUserToGroup(users[2].id, groupId);
   });
 
   afterEach(function* () {
@@ -191,7 +205,9 @@ describe('notifications', function() {
         phoneNumber: '2123456789',
       };
 
+      yield api.loginAsMaster();
       user.id = yield api.createUser(user);
+      yield api.login(users[0].username, users[0].password);
 
       yield api.addUserToGroup(user.id, groupId);
 

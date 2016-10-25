@@ -17,6 +17,7 @@ describe('/groups', function() {
       forename: 'Julien',
     };
 
+    yield api.loginAsMaster();
     user.id = yield api.createUser(user);
     yield api.login(user.username, user.password);
   });
@@ -64,6 +65,7 @@ describe('/groups', function() {
         forename: 'Johan',
       };
 
+      yield api.loginAsMaster();
       user2.id = yield api.createUser(user2);
       yield api.login(user2.username, user2.password);
 

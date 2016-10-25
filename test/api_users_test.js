@@ -23,15 +23,30 @@ describe('/users', function() {
       forename: 'Julien',
     };
 
-    const res = yield chakram.post(
+    let res = yield chakram.post(
+      `${config.apiRoot}/users`, user
+    );
+    expect(res).status(401);
+
+    // as master
+    yield api.loginAsMaster();
+    res = yield chakram.post(
       `${config.apiRoot}/users`, user
     );
     expect(res).status(201);
     expect(res.body).deep.equal({
-      id: 1,
+      id: 2, // 1 is the master user
       forename: user.forename,
       username: user.username,
     });
+
+    // as normal user, we can't create a user either
+    yield api.login(user.username, user.password);
+    res = yield chakram.post(
+      `${config.apiRoot}/users`,
+      { username: 'test', password: 'test', forename: 'test' }
+    );
+    expect(res).status(403);
   });
 
   it('cannot create 2 users with the same username', function*() {
@@ -41,6 +56,7 @@ describe('/users', function() {
       forename: 'Julien',
     };
 
+    yield api.loginAsMaster();
     let res = yield chakram.post(
       `${config.apiRoot}/users`, user
     );
@@ -59,6 +75,7 @@ describe('/users', function() {
       forename: 'Julien',
     };
 
+    yield api.loginAsMaster();
     user.id = yield api.createUser(user);
     yield api.login(user.username, user.password);
 
@@ -97,6 +114,7 @@ describe('/users', function() {
 
     const group = { name: 'CD_Staff' };
 
+    yield api.loginAsMaster();
     user1.id = yield api.createUser(user1);
     user2.id = yield api.createUser(user2);
     yield api.login(user1.username, user1.password);
@@ -143,6 +161,7 @@ describe('/users', function() {
 
     const group = { name: 'CD_Staff' };
 
+    yield api.loginAsMaster();
     user1.id = yield api.createUser(user1);
     user2.id = yield api.createUser(user2);
     yield api.login(user1.username, user1.password);
@@ -168,33 +187,29 @@ describe('/users', function() {
       `${config.apiRoot}/users/${user1.id}/groups`
     );
     expect(res).status(200);
-    expect(res.body).deep.equal(
-      [{ id: 1, name: 'CD_Staff' }]
-    );
+    expect(res.body).deep.equal([ group ]);
 
     res = yield chakram.get(
       `${config.apiRoot}/users/${user1.id}/relations`
     );
     expect(res).status(200);
     expect(res.body).deep.equal(
-      [{ id: 2, forename: 'Johan', username: 'johan@johan.com' }]
+      [{ id: user2.id, forename: 'Johan', username: 'johan@johan.com' }]
     );
 
-    // user1 is the logged-in user, so trying with "myself" a swell
+    // user1 is the logged-in user, so trying with "myself" as well
     res = yield chakram.get(
       `${config.apiRoot}/users/myself/groups`
     );
     expect(res).status(200);
-    expect(res.body).deep.equal(
-      [{ id: 1, name: 'CD_Staff' }]
-    );
+    expect(res.body).deep.equal([ group ]);
 
     res = yield chakram.get(
       `${config.apiRoot}/users/myself/relations`
     );
     expect(res).status(200);
     expect(res.body).deep.equal(
-      [{ id: 2, forename: 'Johan', username: 'johan@johan.com' }]
+      [{ id: user2.id, forename: 'Johan', username: 'johan@johan.com' }]
     );
   });
 });

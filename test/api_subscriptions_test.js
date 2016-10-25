@@ -51,6 +51,7 @@ describe('/subscriptions', function() {
 
   beforeEach(function*() {
     yield serverManager.start();
+    yield api.loginAsMaster();
 
     const user = {
       forename: 'Jane',

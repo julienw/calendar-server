@@ -4,6 +4,9 @@ const rimraf = require('rimraf');
 const tcpPortUsed = require('tcp-port-used');
 const mkdirp = require('mkdirp');
 
+const usersDao = require('../dao/users');
+const appDb = require('../dao/database');
+
 const config = require('./config');
 
 const entryPoint = path.join(__dirname, '../app.js');
@@ -14,6 +17,18 @@ const httpPort = config.httpPort;
 const mqPort = config.mqPort;
 const profilePath = config.profilePath;
 
+function initializeMasterUser() {
+  appDb.init(profilePath);
+
+  return usersDao.create({
+    forename: 'master',
+    username: 'master',
+    password: config.masterPassword,
+  }).then(
+    () => appDb.close()
+  );
+}
+
 module.exports = {
   reinitProfile() {
     rimraf.sync(profilePath);
@@ -21,17 +36,19 @@ module.exports = {
   },
   start() {
     this.reinitProfile();
-
-    handler = spawn(
-      'node',
-      [ entryPoint,
-        '--httpPort', httpPort,
-        '--profile', profilePath,
-        '--mqPort', mqPort,
-        '--notificationPoll', '1000',
-      ],
-      { stdio: 'inherit' }
-    );
+    initializeMasterUser()
+      .then(() => {
+        handler = spawn(
+          'node',
+          [ entryPoint,
+            '--httpPort', httpPort,
+            '--profile', profilePath,
+            '--mqPort', mqPort,
+            '--notificationPoll', '1000',
+          ],
+          { stdio: 'inherit' }
+        );
+      });
 
     const timeBetweenRetriesInMs = 500;
     const timeOutInMs = 5000;

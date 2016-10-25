@@ -34,7 +34,12 @@ function checkUserExists(req, res, next) {
 }
 
 router.post('/', (req, res, next) => {
-  // TODO 2-step creation process with email verification
+  if (!req.user || !req.user.isMaster) {
+    next(new ForbiddenError(
+      'forbidden',
+      `You're not allowed to create users.`
+    ));
+  }
   users.create(req.body).then((id) => {
     debug('User #%s has been created in database', id);
 

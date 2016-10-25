@@ -31,7 +31,8 @@ app.post(`${API_ROOT}/login`, require('./routes/login'));
 // redirect if we're not logged in
 app.use(
   jwt({ secret: config.authenticationSecret })
-    .unless({ path: [ { url: `${API_ROOT}/users`, methods: 'POST' } ] })
+// Note: add this back if you want to skip authentication for /users again
+//    .unless({ path: [ { url: `${API_ROOT}/users`, methods: 'POST' } ] })
 );
 
 // rewrite "myself" with the logged in user id
