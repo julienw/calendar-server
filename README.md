@@ -307,7 +307,10 @@ will point to the logged-in user.
 
 ### POST `/users`
 
-This creates a new user. This doesn't need any authentication.
+Required: the header `Authorization` that identifies a user. Only the master
+user can create more users.
+
+This creates a new user.
 
 #### Input
 
