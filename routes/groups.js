@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:routes/groups');
+const debug = require('debug')('DEBUG:calendar-server:routes/groups');
 const express = require('express');
 
 const groupsDao = require('../dao/groups');

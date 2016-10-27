@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:routes/login');
+const debug = require('debug')('DEBUG:calendar-server:routes/login');
 const jwt = require('jsonwebtoken');
 
 const users = require('../dao/users');

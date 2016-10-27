@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:dao/reminders');
+const debug = require('debug')('DEBUG:calendar-server:dao/reminders');
 
 const database = require('./database');
 const { InvalidInputError, NotFoundError } = require('../utils/errors');

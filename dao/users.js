@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:dao/users');
+const debug = require('debug')('DEBUG:calendar-server:dao/users');
 const argon2 = require('argon2');
 
 const database = require('./database');

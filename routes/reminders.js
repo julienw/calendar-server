@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:routes/reminders');
+const debug = require('debug')('DEBUG:calendar-server:routes/reminders');
 const express = require('express');
 
 const reminders = require('../dao/reminders');

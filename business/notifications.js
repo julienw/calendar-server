@@ -1,4 +1,5 @@
-const debug = require('debug')('calendar-server:business/notifications');
+const debug = require('debug')('DEBUG:calendar-server:business/notifications');
+const log = require('debug')('LOG:calendar-server:business/notifications');
 
 const subscriptionsDao = require('../dao/subscriptions');
 const remindersDao = require('../dao/reminders');
@@ -69,6 +70,8 @@ function sendNewNotifications() {
       debug('Found reminders: %o', reminders);
 
       const remindersPromises = reminders.map(reminder => {
+        log('Sending notifications for reminder #%s', reminder.id);
+
         const statusPromise =
           remindersDao.setReminderStatus(reminder.id, 'pending');
 

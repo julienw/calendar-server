@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:routes/subscriptions');
+const debug = require('debug')('DEBUG:calendar-server:routes/subscriptions');
 
 const express = require('express');
 const subscriptions = require('../dao/subscriptions');

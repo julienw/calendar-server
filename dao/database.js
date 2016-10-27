@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:database');
+const debug = require('debug')('DEBUG:calendar-server:database');
 const path = require('path');
 
 const sqlite3 = require('sqlite3');
