@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:routes/myself');
+const debug = require('debug')('DEBUG:calendar-server:routes/myself');
 const express = require('express');
 const router = express.Router();
 

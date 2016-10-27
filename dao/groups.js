@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:dao/groups');
+const debug = require('debug')('DEBUG:calendar-server:dao/groups');
 
 const database = require('./database');
 const { NotFoundError } = require('../utils/errors');

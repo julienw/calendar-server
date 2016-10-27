@@ -1,6 +1,7 @@
 process.env.DEBUG_FD = 1; // debug() echoes to stdout instead of stderr
 
-const debug = require('debug')('calendar-server:push_sender');
+const debug = require('debug')('DEBUG:calendar-server:push_sender');
+const log = require('debug')('LOG:calendar-server:push_sender');
 const config = require('./config');
 const mq = require('zmq').socket('pull');
 const webpush = require('web-push');
@@ -65,6 +66,11 @@ mq.on('message', function(message) {
 
     return Promise.all(notifications.map(notification => {
       if (notification.subscription) {
+        log(
+          'Sending a webpush notification to subscription %s (reminder #%s)',
+          notification.subscription.subscription.endpoint, reminder.id
+        );
+
         return sendWebpushNotification(notification.subscription, reminder)
           .catch(err => {
             if (err.statusCode === 410) { // subscription gone
@@ -81,6 +87,12 @@ mq.on('message', function(message) {
             ` because Twilio is not properly configured.`
           ));
         }
+
+        log(
+          'Sending a SMS notification to %s (reminder #%s)',
+          notification.sms.target, reminder.id
+        );
+
         return sendSmsNotification(notification.sms);
       }
       return Promise.reject(new Error('Invalid message'));

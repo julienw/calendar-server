@@ -1,4 +1,4 @@
-const debug = require('debug')('calendar-server:subscriptions');
+const debug = require('debug')('DEBUG:calendar-server:subscriptions');
 
 const database = require('./database');
 const { NotFoundError } = require('../utils/errors');
