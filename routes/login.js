@@ -1,4 +1,5 @@
 const debug = require('debug')('DEBUG:calendar-server:routes/login');
+const log = require('debug')('LOG:calendar-server:routes/login');
 const jwt = require('jsonwebtoken');
 
 const users = require('../dao/users');
@@ -30,7 +31,7 @@ module.exports = function login(req, res, next) {
       res.send({ token });
     })
     .catch(err => {
-      debug('Error while login:', err);
+      log('Error while login for user `%s`:', username, err);
       // generic authentication error so that we don't disclose anything
       // specific
       next(new UnauthorizedError(
