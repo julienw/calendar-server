@@ -16,7 +16,7 @@ describe('/users', function() {
     yield serverManager.stop();
   });
 
-  it('can create user', function*() {
+  it('can create an user', function*() {
     const user = {
       username: 'Julien@julien.com',
       password: 'Hello World',
@@ -47,6 +47,52 @@ describe('/users', function() {
       { username: 'test', password: 'test', forename: 'test' }
     );
     expect(res).status(403);
+  });
+
+  it('can delete an user', function*() {
+    const user1 = {
+      username: 'Julien@julien.com',
+      password: 'Hello World',
+      forename: 'Julien',
+    };
+    const user2 = {
+      username: 'Obama',
+      password: 'Hello World',
+      forename: 'Obama',
+    };
+
+    yield api.loginAsMaster();
+    user1.id = yield api.createUser(user1);
+    user2.id = yield api.createUser(user2);
+    const userUrl = `${config.apiRoot}/users/${user1.id}`;
+
+    yield api.logout();
+
+    // can't delete without being logged in
+    let res = yield chakram.delete(
+      userUrl, { currentPassword: user1.password }
+    );
+    expect(res).status(401);
+
+    yield api.login(user2.username, user2.password);
+    // Can't delete another user
+    res = yield chakram.delete(userUrl, { currentPassword: user1.password });
+    expect(res).status(404);
+
+    yield api.login(user1.username, user1.password);
+    // user still exists
+    res = chakram.get(userUrl);
+    expect(res).status(200);
+
+    // can't delete without giving the current password
+    res = yield chakram.delete(userUrl);
+    expect(res).status(403);
+
+    res = yield chakram.delete(userUrl, { currentPassword: user1.password });
+    expect(res).status(204);
+
+    res = yield chakram.get(userUrl);
+    expect(res).status(404);
   });
 
   it('cannot create 2 users with the same username', function*() {

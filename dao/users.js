@@ -189,6 +189,6 @@ module.exports = {
   delete(id) {
     debug('delete(id=%s)', id);
     return database.ready
-      .then(db => db.delete('FROM users WHERE id = ?', id));
+      .then(db => db.delete('FROM user WHERE id = ?', id));
   }
 };

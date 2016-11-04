@@ -100,8 +100,16 @@ router.route('/:id(\\d+)')
       const requestedId = +req.params.id;
 
       const currentPassword = req.body.currentPassword;
+      if (currentPassword === undefined) {
+        next(new ForbiddenError(
+          'password_missing',
+          'You need to supply the current password in `currentPassword`'
+        ));
+        return;
+      }
+
       users.getById(requestedId)
-        .then(user => users.authenticate(user.passwordHash, currentPassword))
+        .then(user => users.authenticate(user.username, currentPassword))
         .then(isCorrect => {
           if (isCorrect) {
             return users.delete(requestedId);
