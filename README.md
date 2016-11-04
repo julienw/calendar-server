@@ -453,6 +453,11 @@ This deletes a user.
 #### Input
 
 Because this is a dangerous operation we request the user's password.
+```json
+{
+  "currentPassword": "MoriartyShallReturn"
+}
+```
 
 #### Output
 * 204 if request succeeded.
